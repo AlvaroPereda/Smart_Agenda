@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "gDKxtY/aPgSu0ADrPbFND5+1oWUYI8Zobc9kL5Aqg3o=",
+  "Hash": "I5AMWxflRI83BxVyPPMgZAPG7mM4K9fJy4ReqyL9XgE=",
   "Source": "Calendar",
   "BasePath": "_content/Calendar",
   "Mode": "Default",
@@ -1193,6 +1193,44 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/lib/jquery/LICENSE.txt"
+    },
+    {
+      "Identity": "/Calendar/wwwroot/lib/toastui-calendar/css/toastui-calendar.min.css",
+      "SourceId": "Calendar",
+      "SourceType": "Discovered",
+      "ContentRoot": "/Calendar/wwwroot/",
+      "BasePath": "_content/Calendar",
+      "RelativePath": "lib/toastui-calendar/css/toastui-calendar.min.css",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/lib/toastui-calendar/css/toastui-calendar.min.css"
+    },
+    {
+      "Identity": "/Calendar/wwwroot/lib/toastui-calendar/js/toastui-calendar.min.js",
+      "SourceId": "Calendar",
+      "SourceType": "Discovered",
+      "ContentRoot": "/Calendar/wwwroot/",
+      "BasePath": "_content/Calendar",
+      "RelativePath": "lib/toastui-calendar/js/toastui-calendar.min.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/lib/toastui-calendar/js/toastui-calendar.min.js"
     }
   ]
 }

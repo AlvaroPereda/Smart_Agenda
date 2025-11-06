@@ -1,6 +1,47 @@
 ﻿@{
-    ViewData["Title"] = "Privacy Policy";
+    ViewData["Title"] = "Calendario de tareas";
 }
-<h1>@ViewData["Title"]</h1>
 
-<p>Use this page to detail your site's privacy policy.</p>
+<h2>Calendario de tareas</h2>
+<div id="calendar" style="height: 700px; border: 1px solid #ddd;"></div>
+
+@section Scripts {
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const CalendarObj = window.tui.Calendar
+        const calendar = new CalendarObj('#calendar', {
+            defaultView: 'week',
+            isReadOnly: false,
+            week: {
+                startDayOfWeek: 1,  
+                hourStart: 8,
+                hourEnd: 22,
+                taskView: false,   
+                scheduleView: ['time'], 
+                
+            },
+            calendars: [{ id: '1', name: 'Tareas', backgroundColor: '#03a9f4' }]
+        });
+
+        const now = new Date();
+        // Dos eventos de ejemplo
+        const eventos = [
+            {
+                id: '1',
+                calendarId: '1',
+                title: 'Revisar documentación',
+                start: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 10, 0),
+                end: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 11, 30)
+            },
+            {
+                id: '2',
+                calendarId: '1',
+                title: 'Desarrollar módulo API',
+                start: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 15, 0),
+                end: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 17, 0)
+            }
+        ];
+        calendar.createEvents(eventos);
+    });
+</script>
+}
