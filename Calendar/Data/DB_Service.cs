@@ -40,9 +40,12 @@ namespace Calendar.Data
                 await _db.SaveChangesAsync();
             }
         }
-        public async Task<List<TaskItem>> GetAllTasks()
+        public async Task<Worker?> GetAllTasks(int id)
         {
-            return await _db.Tasks.ToListAsync();
+            return await _db.Workers
+                .Include(w => w.Schedules)
+                .Include(w => w.ContainerTasks)
+                .FirstOrDefaultAsync(w => w.Id == id);
         }
     }
 }

@@ -23,7 +23,7 @@
         final.forEach(task => {
             const taskItem = document.createElement("div");
             console.log(task)
-            taskItem.textContent = `Tarea: ${task.title}, Fecha: ${task.deadline}, Horas: ${task.hours}, Prioridad: ${task.priority.toFixed(2)}`;
+            taskItem.textContent = `Tarea: ${task.title}, Start: ${task.start}, End: ${task.end}, Prioridad: ${task.priority.toFixed(2)}`;
             taskListDiv.appendChild(taskItem);
         });
     });
