@@ -1,4 +1,4 @@
-# Smart Calendar (En Progreso)
+# Smart Agenda (En Progreso)
 
 ⚠️ **Aviso:** Esta aplicación está en progreso y no se encuentra finalizada.
 
@@ -9,7 +9,7 @@ Esta es una aplicación desarrollada en **.NET Core 8.0** que utiliza **MySQL** 
 
 ## Ejecución
 
-Para levantar la aplicación y la base de datos navegue hasta la carpeta Smart_Calendar y ejecuta:
+Para levantar la aplicación y la base de datos navegue hasta la carpeta Smart_Agenda y ejecuta:
 
 ```bash
 docker compose up -d
@@ -25,7 +25,7 @@ Para detener los contenedores y eliminar los volúmenes de datos:
 docker compose down -v 
 ```
 ```bash
-docker rmi smart_calendar-net
+docker rmi smart_agenda-net
 ```
 ```bash
 docker rmi mysql:8.0
