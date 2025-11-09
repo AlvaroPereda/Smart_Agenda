@@ -25,5 +25,6 @@ Para detener los contenedores y eliminar los volúmenes de datos:
 docker compose down -v 
 ```
 ```bash
-docker rmi mini-tfg-net
+docker rmi smart_calendar-net
+docker rmi mysql
 ```
