@@ -28,5 +28,5 @@ docker compose down -v
 docker rmi smart_calendar-net
 ```
 ```bash
-docker rmi mysql
+docker rmi mysql:8.0
 ```
