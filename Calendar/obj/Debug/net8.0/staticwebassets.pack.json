@@ -21,6 +21,10 @@
       "PackagePath": "staticwebassets/js/site.js"
     },
     {
+      "Id": "/Calendar/wwwroot/js/task.js",
+      "PackagePath": "staticwebassets/js/task.js"
+    },
+    {
       "Id": "/Calendar/wwwroot/lib/bootstrap/LICENSE",
       "PackagePath": "staticwebassets/lib/bootstrap"
     },

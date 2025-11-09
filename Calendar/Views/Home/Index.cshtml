@@ -1,25 +1,11 @@
 ﻿
 
 <div class="text-center">
-    <button id="btnViewTasks">Ver Tareas</button>
-    <div id="taskList"></div>
     <button id="btnCreateWorker">Crear trabajador</button>
     <button id="btnViewWorkers">Ver Trabajadores</button>
 </div>
 
 <script>
-    document.getElementById("btnViewTasks").addEventListener("click", async function() {
-        const data = await fetch('/Home/GetTasks');
-        const final = await data.json();
-        const taskListDiv = document.getElementById("taskList");
-        taskListDiv.innerHTML = "";
-        final.forEach(task => {
-            const taskItem = document.createElement("div");
-            console.log(task)
-            taskItem.textContent = `Tarea: ${task.title}, Start: ${task.start}, End: ${task.end}, Prioridad: ${task.priority.toFixed(2)}`;
-            taskListDiv.appendChild(taskItem);
-        });
-    });
     document.getElementById("btnCreateWorker").addEventListener("click", async function() {
         const data = await fetch('/Home/CreateWorker');
     });

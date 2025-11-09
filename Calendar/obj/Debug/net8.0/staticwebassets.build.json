@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "LZUecr2BJFvVvAmCjM3kBV/h5PyxnmHMyDdKmAD/BKM=",
+  "Hash": "+Znq7E8dH4gTyFE72h5R5TgA+OVfuj4Ij7B8MRs5bn8=",
   "Source": "Calendar",
   "BasePath": "_content/Calendar",
   "Mode": "Default",
@@ -129,6 +129,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot/js/site.js"
+    },
+    {
+      "Identity": "/Calendar/wwwroot/js/task.js",
+      "SourceId": "Calendar",
+      "SourceType": "Discovered",
+      "ContentRoot": "/Calendar/wwwroot/",
+      "BasePath": "_content/Calendar",
+      "RelativePath": "js/task.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot/js/task.js"
     },
     {
       "Identity": "/Calendar/wwwroot/lib/bootstrap/dist/css/bootstrap-grid.css",
