@@ -1,14 +1,4 @@
 services:
-  net:
-    build: 
-      context: .
-    container_name: Calendar
-    tty: true
-    depends_on:
-      - mysql
-    environment:
-      - ConnectionStrings__DefaultConnection=${DEFAULT_CONNECTION}
-
   mysql:
     image: mysql:8.0
     container_name: mysql
@@ -17,10 +7,26 @@ services:
       - MYSQL_DATABASE=${MYSQL_DATABASE}
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-    ports:
-      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  net:
+    build: 
+      context: .
+    container_name: Calendar
+    tty: true
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      - ConnectionStrings__DefaultConnection=${DEFAULT_CONNECTION}
+    ports:
+      - "5025:5025"
 
 volumes:
   mysql_data:

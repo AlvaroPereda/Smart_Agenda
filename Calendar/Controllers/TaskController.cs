@@ -42,6 +42,8 @@ public class TaskController(DB_Service db) : Controller
     [HttpPost]
     public async Task<IActionResult> Create(string task, DateOnly date, int hours)
     {
+        var worker = await _db.GetWorkers();
+        if (worker.Count < 1) _ = await CreateWorker();
         TaskItem nuevaTarea = new()
         {
             Title = task,
@@ -128,64 +130,79 @@ public class TaskController(DB_Service db) : Controller
             double hoursLeft = task.Hours;
             DateTime start = currentStart;
 
-                while (hoursLeft > 0)
+            while (hoursLeft > 0)
+            {
+                // Si estamos fuera del horario actual, pasamos al siguiente
+                if (start >= currentEnd)
                 {
-                    // Si estamos fuera del horario actual, pasamos al siguiente
-                    if (start >= currentEnd)
+                    scheduleIndex++;
+
+                    if (scheduleIndex >= schedule.Count)
                     {
-                        scheduleIndex++;
-
-                        if (scheduleIndex >= schedule.Count)
-                        {
-                            // Pasamos al siguiente día
-                            scheduleIndex = 0;
-                            dayOffset++;
-                        }
-
-                        start = DateTime.Today.AddDays(dayOffset).Add(schedule[scheduleIndex].StartTime.ToTimeSpan());
-                        currentEnd = DateTime.Today.AddDays(dayOffset).Add(schedule[scheduleIndex].EndTime.ToTimeSpan());
+                        // Pasamos al siguiente día
+                        scheduleIndex = 0;
+                        dayOffset++;
                     }
 
-                    // Calculamos cuántas horas quedan en esta franja
-                    var availableHours = (currentEnd - start).TotalHours;
-
-                    // Si la tarea cabe en esta franja
-                    if (hoursLeft <= availableHours)
-                    {
-                        result.Add(new TaskItem
-                        {
-                            Title = task.Title,
-                            Priority = task.Priority,
-                            Hours = (int)hoursLeft,
-                            Start = start,
-                            End = start.AddHours(hoursLeft),
-                            Deadline = task.Deadline
-                        });
-
-                        start = start.AddHours(hoursLeft);
-                        currentStart = start;
-                        hoursLeft = 0;
-                    }
-                    else
-                    {
-                        // Dividimos la tarea en esta franja y seguimos en la siguiente
-                        result.Add(new TaskItem
-                        {
-                            Title = task.Title,
-                            Priority = task.Priority,
-                            Hours = (int)availableHours,
-                            Start = start,
-                            End = currentEnd,
-                            Deadline = task.Deadline
-                        });
-
-                        hoursLeft -= availableHours;
-                        start = currentEnd; // Avanzamos a la siguiente franja o día
-                    }
+                    start = DateTime.Today.AddDays(dayOffset).Add(schedule[scheduleIndex].StartTime.ToTimeSpan());
+                    currentEnd = DateTime.Today.AddDays(dayOffset).Add(schedule[scheduleIndex].EndTime.ToTimeSpan());
                 }
+
+                // Calculamos cuántas horas quedan en esta franja
+                var availableHours = (currentEnd - start).TotalHours;
+
+                // Si la tarea cabe en esta franja
+                if (hoursLeft <= availableHours)
+                {
+                    result.Add(new TaskItem
+                    {
+                        Title = task.Title,
+                        Priority = task.Priority,
+                        Hours = (int)hoursLeft,
+                        Start = start,
+                        End = start.AddHours(hoursLeft),
+                        Deadline = task.Deadline
+                    });
+
+                    start = start.AddHours(hoursLeft);
+                    currentStart = start;
+                    hoursLeft = 0;
+                }
+                else
+                {
+                    // Dividimos la tarea en esta franja y seguimos en la siguiente
+                    result.Add(new TaskItem
+                    {
+                        Title = task.Title,
+                        Priority = task.Priority,
+                        Hours = (int)availableHours,
+                        Start = start,
+                        End = currentEnd,
+                        Deadline = task.Deadline
+                    });
+
+                    hoursLeft -= availableHours;
+                    start = currentEnd; // Avanzamos a la siguiente franja o día
+                }
+            }
         }
 
         return Json(result);
+    }
+    
+    private async Task<IActionResult> CreateWorker()
+    {
+        Worker worker = new()
+        {
+            Name = "Juan Perez",
+            Schedules =
+            [
+                new() { StartTime = new TimeOnly(8, 0), EndTime = new TimeOnly(13, 0) },
+                new() { StartTime = new TimeOnly(15, 0), EndTime = new TimeOnly(17, 0) }
+            ]
+        };
+        await _db.AddWorker(worker);
+        return Ok();
     }
     
     #endregion

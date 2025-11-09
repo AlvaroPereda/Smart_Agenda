@@ -15,6 +15,17 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('btnPrev').addEventListener('click', () => calendar.prev());
     document.getElementById('btnNext').addEventListener('click', () => calendar.next());
     document.getElementById('btnToday').addEventListener('click', () => calendar.today());
+
+    // Esta parte se tiene que mejorar, esto es no es correcto
+    if (task.length > 0) {
+        task.forEach(e => {
+            e.start = new Date(e.start);
+            e.end = new Date(e.end);
+            e.start.setHours(e.start.getHours() - 1);
+            e.end.setHours(e.end.getHours() - 1);
+        });
+    }
+
     calendar.createEvents(task);
 });
 

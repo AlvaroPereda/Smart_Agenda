@@ -29,7 +29,7 @@ app.UseAuthorization();
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Home}/{action=Index}");
+    pattern: "{controller=Calendar}/{action=Index}");
 
 // Crea las tablas
 using (var scope = app.Services.CreateScope())
@@ -37,5 +37,7 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<DB_Configuration>();
     db.Database.EnsureCreated();
 }
+
+builder.WebHost.UseUrls("http://0.0.0.0:5025");
 
 app.Run();

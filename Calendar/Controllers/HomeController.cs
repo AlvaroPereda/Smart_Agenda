@@ -26,41 +26,6 @@ public class HomeController : Controller
         return View();
     }
 
-
-    public async Task<IActionResult> CreateWorker()
-    {
-        Worker worker = new()
-        {
-            Name = "Juan Perez",
-            Schedules =
-            [
-                new() { StartTime = new TimeOnly(8, 0), EndTime = new TimeOnly(13, 0) },
-                new() { StartTime = new TimeOnly(15, 0), EndTime = new TimeOnly(17, 0) }
-            ]
-        };
-        await _db.AddWorker(worker);
-        return Ok();
-    }
-
-    public async Task<Worker> GetWorker()
-    {
-        Worker worker = new()
-        {
-            Name = "Default Worker",
-            Schedules =
-            [
-                new() { StartTime = new TimeOnly(8, 0), EndTime = new TimeOnly(13, 0) },
-                new() { StartTime = new TimeOnly(15, 0), EndTime = new TimeOnly(17, 0) }
-            ]
-        };
-        return await _db.GetWorkerById(1) ?? worker;
-    }
-    public async Task<List<Worker>> GetWorkers()
-    {
-        List<Worker> workers = await _db.GetWorkers();
-        return workers;
-    }
-
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {

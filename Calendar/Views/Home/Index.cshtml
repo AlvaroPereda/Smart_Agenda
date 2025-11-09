@@ -1,17 +1,3 @@
-﻿
-
-<div class="text-center">
-    <button id="btnCreateWorker">Crear trabajador</button>
-    <button id="btnViewWorkers">Ver Trabajadores</button>
+﻿<div class="text-center">
+    <h2>In progress</h2>
 </div>
-
-<script>
-    document.getElementById("btnCreateWorker").addEventListener("click", async function() {
-        const data = await fetch('/Home/CreateWorker');
-    });
-    document.getElementById("btnViewWorkers").addEventListener("click", async function() {
-        const data = await fetch('/Home/GetWorkers');
-        const final = await data.json();
-        console.log(final);
-    });
-</script>
