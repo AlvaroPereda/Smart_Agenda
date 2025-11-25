@@ -1,14 +1,26 @@
 document.addEventListener('DOMContentLoaded', async function() {
-    const task = await loadTasks();
-    const CalendarObj = window.tui.Calendar;
+    const task = await loadTasks()
+    const CalendarObj = window.tui.Calendar
     const calendar = new CalendarObj('#calendar', {
-        defaultView: 'week',
+        defaultView: 'month',
+        taskView: false,
+        scheduleView: false,
         isReadOnly: false,
-        week: {
+        month: {
+            workweek: true,
             startDayOfWeek: 1,
             hourStart: 8,
             hourEnd: 22,
+            taskView: false,
+            visibleWeeksCount: 2
         },
+        template: {
+            time: function(event) {
+                const hora = event.start.getHours().toString().padStart(2, '0')
+                const min = event.start.getMinutes().toString().padStart(2, '0')
+                return `<strong>${hora}:${min}</strong> ${event.title}`
+            }
+        }
     });
 
 
