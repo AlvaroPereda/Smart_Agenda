@@ -47,5 +47,10 @@ namespace Calendar.Data
                 .Include(w => w.ContainerTasks)
                 .FirstOrDefaultAsync(w => w.Id == id);
         }
+
+        public async Task<Worker?> AuthenticateUser(string username, string password)
+        {
+            return await _db.Workers.FirstOrDefaultAsync(w => w.Name == username && w.Password == password);
+        }
     }
 }

@@ -42,7 +42,13 @@ public class TaskController(DB_Service db) : Controller
     [HttpPost]
     public async Task<IActionResult> Create(string task, DateOnly date, int hours)
     {
-        var worker = await _db.GetWorkers();
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        if (date < today)
+        {
+            ModelState.AddModelError("date", "La fecha no puede ser menor a hoy.");
+            return View();
+        }
+        var worker = await GetTasks();
         if (worker.Count < 1) _ = await CreateWorker();
         TaskItem nuevaTarea = new()
         {
@@ -105,7 +111,8 @@ public class TaskController(DB_Service db) : Controller
             [
                 new() { StartTime = new TimeOnly(8, 0), EndTime = new TimeOnly(13, 0) },
                 new() { StartTime = new TimeOnly(15, 0), EndTime = new TimeOnly(17, 0) }
-            ]
+            ],
+            Password = "12345"
         };
         return await _db.GetWorkerById(1) ?? worker;
     }
@@ -199,7 +206,8 @@ public class TaskController(DB_Service db) : Controller
             [
                 new() { StartTime = new TimeOnly(8, 0), EndTime = new TimeOnly(13, 0) },
                 new() { StartTime = new TimeOnly(15, 0), EndTime = new TimeOnly(17, 0) }
-            ]
+            ],
+            Password = "12345"
         };
         await _db.AddWorker(worker);
         return Ok();

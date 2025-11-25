@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Calendar.Models;
 using Calendar.Data;
+using System.Threading.Tasks;
 
 namespace Calendar.Controllers;
 
@@ -23,6 +24,21 @@ public class HomeController : Controller
     }
     public IActionResult Privacy()
     {
+        return View();
+    }
+    public IActionResult Login()
+    {
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Login(string username, string password)
+    {
+        var user = await _db.AuthenticateUser(username, password);
+        if(user != null)
+        {
+            return RedirectToAction("Index", "Calendar");
+        }
         return View();
     }
 
