@@ -4,9 +4,8 @@ WORKDIR /Calendar
 
 COPY Calendar .
 
-RUN dotnet add package Microsoft.EntityFrameworkCore \
-    && dotnet add package Pomelo.EntityFrameworkCore.MySql
+RUN dotnet restore
 
 EXPOSE 5025
 
-CMD [ "dotnet", "run" ]
+# CMD [ "dotnet", "run" ]
