@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 async function loadTasks() {
     try {
-        const response = await fetch('/Task/GetTasks');
+        const response = await fetch('/Task/GetTaskId');
         const data = await response.json();
         
         const container = document.getElementById('task_container');

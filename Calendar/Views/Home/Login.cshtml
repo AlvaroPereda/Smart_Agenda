@@ -1,5 +1,43 @@
-<form action="/Home/Login" method="post">
-    <input type="text" name="username" placeholder="Usuario" required />
-    <input type="password" name="password" placeholder="Contraseña" required />
-    <button type="submit">Iniciar Sesión</button>
-</form>
+<div>
+    <form action="/Home/Login" method="POST">
+        <input type="text" name="username" placeholder="Usuario" required />
+        <input type="password" name="password" placeholder="Contraseña" required />
+        <input type="text" name="login" value="true" id="login-input" hidden required>
+        <select name="start" id="start" hidden></select>
+        <select name="end" id="end" hidden></select>
+        <button type="submit" id="submit-button">Entrar</button>
+    </form>
+        <button type="button" id="toggle">Registarse</button>
+</div>
+
+<script>
+    let login = true;
+    document.getElementById("toggle").onclick = function() {
+        login = !login
+        document.getElementById("submit-button").innerText = login ? "Entrar" : "Crear cuenta"
+        document.getElementById("login-input").value = login ? "true" : "false"
+        document.getElementById("toggle").innerText = login ? "Registarse" : "Inicar sesión"
+        document.getElementById("start").hidden = login;
+        document.getElementById("end").hidden = login;
+    };
+    const start = document.getElementById('start');
+        for (let h = 0; h < 24; h++) {
+            const hh = String(h).padStart(2, '0');
+            ['00', '30'].forEach(mm => {
+                const opt = document.createElement('option');
+                opt.value = `${hh}:${mm}`;
+                opt.text = `${hh}:${mm}`;
+                start.appendChild(opt);
+            });
+        }
+    const end = document.getElementById('end');
+        for (let h = 0; h < 24; h++) {
+            const hh = String(h).padStart(2, '0');
+            ['00', '30'].forEach(mm => {
+                const opt = document.createElement('option');
+                opt.value = `${hh}:${mm}`;
+                opt.text = `${hh}:${mm}`;
+                end.appendChild(opt);
+            });
+        }
+</script>

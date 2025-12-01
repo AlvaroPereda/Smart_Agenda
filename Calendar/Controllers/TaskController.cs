@@ -30,26 +30,37 @@ public class TaskController(DB_Service db) : Controller
     {
         return View();
     }
-    
-    public async Task<List<TaskItem>> GetTasks()
-    {
-        var worker = await _db.GetAllTasks(1);
-        return worker?.ContainerTasks ?? [];
-    }
 
+    [HttpGet]
+    public async Task<List<TaskItem>> GetTaskId()
+    {
+        var userIdCookie = Request.Cookies["userId"];
+        if(string.IsNullOrEmpty(userIdCookie))
+        {
+            return [];
+        }
+        Worker user = await _db.GetWorkerById(int.Parse(userIdCookie));
+        return user.ContainerTasks;
+    }
+    
     #endregion
     #region POST Methods
     [HttpPost]
     public async Task<IActionResult> Create(string task, DateOnly date, int hours)
     {
         var today = DateOnly.FromDateTime(DateTime.Now);
+        var userIdCookie = Request.Cookies["userId"];
         if (date < today)
         {
             ModelState.AddModelError("date", "La fecha no puede ser menor a hoy.");
             return View();
         }
-        var worker = await GetTasks();
-        if (worker.Count < 1) _ = await CreateWorker();
+        if(string.IsNullOrEmpty(userIdCookie))
+        {
+            return RedirectToAction("Login", "Home");
+        }
+        Worker user = await _db.GetWorkerById(int.Parse(userIdCookie));
+
         TaskItem nuevaTarea = new()
         {
             Title = task,
@@ -57,8 +68,9 @@ public class TaskController(DB_Service db) : Controller
             Hours = hours,
             Priority = CalculatePriority(date, hours)
         };
-        await CalculateSchedule(nuevaTarea);
-        await _db.UpdateContainerTasks(1, nuevaTarea);
+
+        CalculateSchedule(nuevaTarea, user);
+        await _db.UpdateContainerTasks(int.Parse(userIdCookie), nuevaTarea);
         return RedirectToAction("Index");
     }
 
@@ -73,9 +85,8 @@ public class TaskController(DB_Service db) : Controller
         return priority;
     }
 
-    private async Task<TaskItem> CalculateSchedule(TaskItem task)
+    private static TaskItem CalculateSchedule(TaskItem task, Worker worker)
     {
-        Worker worker = await GetWorker();
         List<Schedule> horarios = worker.Schedules;
         List<TaskItem> tasksWorker = worker.ContainerTasks;
         if (tasksWorker.Count == 0)
@@ -102,26 +113,16 @@ public class TaskController(DB_Service db) : Controller
         return task;
     }
 
-    public async Task<Worker> GetWorker()
-    {
-        Worker worker = new()
-        {
-            Name = "Default Worker",
-            Schedules =
-            [
-                new() { StartTime = new TimeOnly(8, 0), EndTime = new TimeOnly(13, 0) },
-                new() { StartTime = new TimeOnly(15, 0), EndTime = new TimeOnly(17, 0) }
-            ],
-            Password = "12345"
-        };
-        return await _db.GetWorkerById(1) ?? worker;
-    }
-
     public async Task<IActionResult> GetTasksCalendar()
     {
-        var worker = await _db.GetAllTasks(1);
-        var schedule = worker?.Schedules?.OrderBy(s => s.StartTime).ToList();
-        var tasks = worker?.ContainerTasks?.OrderByDescending(t => t.Priority);
+        var userIdCookie = Request.Cookies["userId"];
+        if(string.IsNullOrEmpty(userIdCookie))
+        {
+            return RedirectToAction("Login", "Home");
+        }
+        Worker user = await _db.GetWorkerById(int.Parse(userIdCookie));
+        var schedule = user.Schedules?.OrderBy(s => s.StartTime).ToList();
+        var tasks = user.ContainerTasks?.OrderByDescending(t => t.Priority);
 
         if (schedule == null || tasks == null) return BadRequest("No se encontró el horario o las tareas.");
 
@@ -130,7 +131,7 @@ public class TaskController(DB_Service db) : Controller
         var currentEnd = DateTime.Today.AddDays(dayOffset).Add(schedule[0].EndTime.ToTimeSpan());
         int scheduleIndex = 0;
 
-        List<TaskItem> result = new();
+        List<TaskItem> result = [];
 
         foreach (var task in tasks)
         {
@@ -193,24 +194,7 @@ public class TaskController(DB_Service db) : Controller
                 }
             }
         }
-
         return Json(result);
-    }
-    
-    private async Task<IActionResult> CreateWorker()
-    {
-        Worker worker = new()
-        {
-            Name = "Juan Perez",
-            Schedules =
-            [
-                new() { StartTime = new TimeOnly(8, 0), EndTime = new TimeOnly(13, 0) },
-                new() { StartTime = new TimeOnly(15, 0), EndTime = new TimeOnly(17, 0) }
-            ],
-            Password = "12345"
-        };
-        await _db.AddWorker(worker);
-        return Ok();
     }
     
     #endregion

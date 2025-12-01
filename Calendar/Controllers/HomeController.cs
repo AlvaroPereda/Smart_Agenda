@@ -2,7 +2,6 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Calendar.Models;
 using Calendar.Data;
-using System.Threading.Tasks;
 
 namespace Calendar.Controllers;
 
@@ -32,12 +31,41 @@ public class HomeController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Login(string username, string password)
+    public async Task<IActionResult> Login(string username, string password, bool login, string? start, string? end)
     {
-        var user = await _db.AuthenticateUser(username, password);
-        if(user != null)
+        if(login) // Es un inicio de sesión
         {
-            return RedirectToAction("Index", "Calendar");
+            var user = await _db.AuthenticateUser(username, password);
+            if(user != null)
+            {
+                Response.Cookies.Append("UserId", user.Id.ToString());
+                return RedirectToAction("Index", "Calendar");
+            }
+        }
+        else // Es un registro
+        {
+            var user = await _db.GetWorkerByName(username);
+            if(user == null)
+            {
+                var worker = new Worker
+                {
+                    Name = username,
+                    Password = password,
+                    Schedules =
+                    [
+                        new Schedule
+                        {
+                            StartTime = TimeOnly.Parse(start!),
+                            EndTime = TimeOnly.Parse(end!)
+                        }
+                    ],
+                    ContainerTasks = []
+                };
+                await _db.AddWorker(worker);
+                Console.WriteLine(worker.Id);
+                Response.Cookies.Append("UserId", worker.Id.ToString());
+                return RedirectToAction("Index", "Calendar");
+            }
         }
         return View();
     }
