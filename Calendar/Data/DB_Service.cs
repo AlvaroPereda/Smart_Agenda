@@ -62,5 +62,28 @@ namespace Calendar.Data
         {
             return await _db.Workers.FirstOrDefaultAsync(w => w.Name == username && w.Password == password);
         }
+        public async Task DeleteTask(int workerId, int taskId)
+        {
+            try
+            {
+                Worker worker = await GetWorkerById(workerId);
+                TaskItem? taskToRemove = worker.ContainerTasks.FirstOrDefault(t => t.Id == taskId);
+                if (taskToRemove != null)
+                {
+                    worker.ContainerTasks.Remove(taskToRemove);
+                    _db.Tasks.Remove(taskToRemove);
+                    await _db.SaveChangesAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
+        }
+        public async Task UpdateTask(TaskItem task)
+        {
+            _db.Tasks.Update(task);
+            await _db.SaveChangesAsync();
+        }
     }
 }

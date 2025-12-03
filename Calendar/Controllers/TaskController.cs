@@ -74,6 +74,49 @@ public class TaskController(DB_Service db) : Controller
         return RedirectToAction("Index");
     }
 
+
+    #endregion
+    #region PUT Methods
+    [HttpPut("Task/UpdateTask/{id}")]
+    public async Task<IActionResult> UpdateTask(int id, [FromBody] TaskItem updatedTask)
+    {
+        var userIdCookie = Request.Cookies["userId"];
+        if(string.IsNullOrEmpty(userIdCookie))
+        {
+            return Unauthorized(new { message = "Se requiere autenticación." });
+        }
+        Worker user = await _db.GetWorkerById(int.Parse(userIdCookie));
+        TaskItem? task = user.ContainerTasks.FirstOrDefault(t => t.Title == updatedTask.Title && t.Id != id);
+        if (task != null)
+            return BadRequest(new { message = "Ya existe una tarea con ese título." });
+        
+        TaskItem? taskToUpdate = user.ContainerTasks.FirstOrDefault(t => t.Id == id);
+        if (taskToUpdate == null)
+            return NotFound(new { message = "Tarea no encontrada." });
+        
+        
+        await DeleteTask(id); // Elimino la tarea antigua
+        await Create(updatedTask.Title, updatedTask.Deadline, updatedTask.Hours); // Creo la tarea actualizada
+
+        return Ok();
+    }
+
+
+    #endregion
+    #region DELETE Methods
+    [HttpDelete("Task/DeleteTask/{id}")]
+    public async Task<IActionResult> DeleteTask(int id)
+    {
+        var userIdCookie = Request.Cookies["userId"];
+        if(string.IsNullOrEmpty(userIdCookie))
+        {
+            return Unauthorized(new { message = "Se requiere autenticación." }); 
+        }
+        await _db.DeleteTask(int.Parse(userIdCookie), id);
+        return NoContent();
+    }
+
+
     #endregion
     #region Private Logic
     private readonly DB_Service _db = db;
@@ -195,7 +238,7 @@ public class TaskController(DB_Service db) : Controller
             }
         }
         return Json(result);
-    }
+    }  
     
     #endregion
 }
