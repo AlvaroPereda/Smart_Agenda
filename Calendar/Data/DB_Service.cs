@@ -24,7 +24,7 @@ namespace Calendar.Data
         {
             return await _db.Users.Include(w => w.Schedules).ToListAsync();
         }
-        public async Task<User> GetUserById(int id)
+        public async Task<User> GetUserById(Guid id)
         {
             var result = await _db.Users
                 .Include(w => w.Schedules)
@@ -33,7 +33,7 @@ namespace Calendar.Data
             return result;
         }
 
-        public async Task UpdateContainerTasks(int id, TaskItem task)
+        public async Task UpdateContainerTasks(Guid id, TaskItem task)
         {
             try
             {
@@ -45,7 +45,7 @@ namespace Calendar.Data
                 throw new Exception(ex.Message);
             }
         }
-        public async Task<User> GetAllTasks(int id)
+        public async Task<User> GetAllTasks(Guid id)
         {
             var result = await _db.Users
                 .Include(w => w.Schedules)
@@ -62,7 +62,7 @@ namespace Calendar.Data
         {
             return await _db.Users.FirstOrDefaultAsync(w => w.Name == username && w.Password == password);
         }
-        public async Task DeleteTask(int UserId, int taskId)
+        public async Task DeleteTask(Guid UserId, Guid taskId)
         {
             try
             {

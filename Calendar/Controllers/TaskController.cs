@@ -39,7 +39,7 @@ public class TaskController(DB_Service db) : Controller
         {
             return [];
         }
-        User user = await _db.GetUserById(int.Parse(userIdCookie));
+        User user = await _db.GetUserById(Guid.Parse(userIdCookie));
         return user.ContainerTasks;
     }
     
@@ -59,7 +59,7 @@ public class TaskController(DB_Service db) : Controller
         {
             return RedirectToAction("Login", "Home");
         }
-        User user = await _db.GetUserById(int.Parse(userIdCookie));
+        User user = await _db.GetUserById(Guid.Parse(userIdCookie));
 
         TaskItem nuevaTarea = new()
         {
@@ -70,7 +70,7 @@ public class TaskController(DB_Service db) : Controller
         };
 
         CalculateSchedule(nuevaTarea, user);
-        await _db.UpdateContainerTasks(int.Parse(userIdCookie), nuevaTarea);
+        await _db.UpdateContainerTasks(Guid.Parse(userIdCookie), nuevaTarea);
         return RedirectToAction("Index");
     }
 
@@ -78,14 +78,14 @@ public class TaskController(DB_Service db) : Controller
     #endregion
     #region PUT Methods
     [HttpPut("Task/UpdateTask/{id}")]
-    public async Task<IActionResult> UpdateTask(int id, [FromBody] TaskItem updatedTask)
+    public async Task<IActionResult> UpdateTask(Guid id, [FromBody] TaskItem updatedTask)
     {
         var userIdCookie = Request.Cookies["userId"];
         if(string.IsNullOrEmpty(userIdCookie))
         {
             return Unauthorized(new { message = "Se requiere autenticación." });
         }
-        User user = await _db.GetUserById(int.Parse(userIdCookie));
+        User user = await _db.GetUserById(Guid.Parse(userIdCookie));
         TaskItem? task = user.ContainerTasks.FirstOrDefault(t => t.Title == updatedTask.Title && t.Id != id);
         if (task != null)
             return BadRequest(new { message = "Ya existe una tarea con ese título." });
@@ -104,14 +104,14 @@ public class TaskController(DB_Service db) : Controller
     #endregion
     #region DELETE Methods
     [HttpDelete("Task/DeleteTask/{id}")]
-    public async Task<IActionResult> DeleteTask(int id)
+    public async Task<IActionResult> DeleteTask(Guid id)
     {
         var userIdCookie = Request.Cookies["userId"];
         if(string.IsNullOrEmpty(userIdCookie))
         {
             return Unauthorized(new { message = "Se requiere autenticación." }); 
         }
-        await _db.DeleteTask(int.Parse(userIdCookie), id);
+        await _db.DeleteTask(Guid.Parse(userIdCookie), id);
         return NoContent();
     }
 
@@ -162,7 +162,7 @@ public class TaskController(DB_Service db) : Controller
         {
             return RedirectToAction("Login", "Home");
         }
-        User user = await _db.GetUserById(int.Parse(userIdCookie));
+        User user = await _db.GetUserById(Guid.Parse(userIdCookie));
         var schedule = user.Schedules?.OrderBy(s => s.StartTime).ToList();
         var tasks = user.ContainerTasks?.OrderByDescending(t => t.Priority);
 
