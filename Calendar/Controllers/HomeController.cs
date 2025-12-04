@@ -44,10 +44,10 @@ public class HomeController : Controller
         }
         else // Es un registro
         {
-            var user = await _db.GetWorkerByName(username);
+            var user = await _db.GetUserByName(username);
             if(user == null)
             {
-                var worker = new Worker
+                var wser = new User
                 {
                     Name = username,
                     Password = password,
@@ -61,9 +61,9 @@ public class HomeController : Controller
                     ],
                     ContainerTasks = []
                 };
-                await _db.AddWorker(worker);
-                Console.WriteLine(worker.Id);
-                Response.Cookies.Append("UserId", worker.Id.ToString());
+                await _db.AddUser(wser);
+                Console.WriteLine(wser.Id);
+                Response.Cookies.Append("UserId", wser.Id.ToString());
                 return RedirectToAction("Index", "Calendar");
             }
         }

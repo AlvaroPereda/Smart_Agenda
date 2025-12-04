@@ -13,20 +13,20 @@ namespace Calendar.Data
             await _db.SaveChangesAsync();
         }
 
-        public async Task<Worker> AddWorker(Worker worker)
+        public async Task<User> AddUser(User wser)
         {
-            _db.Workers.Add(worker);
+            _db.Users.Add(wser);
             await _db.SaveChangesAsync();
-            return worker;
+            return wser;
         }
 
-        public async Task<List<Worker>> GetWorkers()
+        public async Task<List<User>> GetUsers()
         {
-            return await _db.Workers.Include(w => w.Schedules).ToListAsync();
+            return await _db.Users.Include(w => w.Schedules).ToListAsync();
         }
-        public async Task<Worker> GetWorkerById(int id)
+        public async Task<User> GetUserById(int id)
         {
-            var result = await _db.Workers
+            var result = await _db.Users
                 .Include(w => w.Schedules)
                 .Include(w => w.ContainerTasks)
                 .FirstOrDefaultAsync(w => w.Id == id) ?? throw new Exception("Usuario no encontrado con ese id.");
@@ -37,40 +37,40 @@ namespace Calendar.Data
         {
             try
             {
-                Worker worker = await GetWorkerById(id);
-                worker.ContainerTasks.Add(task);
+                User wser = await GetUserById(id);
+                wser.ContainerTasks.Add(task);
                 await _db.SaveChangesAsync();
             } catch (Exception ex)
             {
                 throw new Exception(ex.Message);
             }
         }
-        public async Task<Worker> GetAllTasks(int id)
+        public async Task<User> GetAllTasks(int id)
         {
-            var result = await _db.Workers
+            var result = await _db.Users
                 .Include(w => w.Schedules)
                 .Include(w => w.ContainerTasks)
                 .FirstOrDefaultAsync(w => w.Id == id) ?? throw new Exception("Usuario no encontrado con ese id.");
             return result;
         }
 
-        public async Task<Worker?> GetWorkerByName(string name)
+        public async Task<User?> GetUserByName(string name)
         {
-            return await _db.Workers.FirstOrDefaultAsync(w => w.Name == name);
+            return await _db.Users.FirstOrDefaultAsync(w => w.Name == name);
         }
-        public async Task<Worker?> AuthenticateUser(string username, string password)
+        public async Task<User?> AuthenticateUser(string username, string password)
         {
-            return await _db.Workers.FirstOrDefaultAsync(w => w.Name == username && w.Password == password);
+            return await _db.Users.FirstOrDefaultAsync(w => w.Name == username && w.Password == password);
         }
-        public async Task DeleteTask(int workerId, int taskId)
+        public async Task DeleteTask(int UserId, int taskId)
         {
             try
             {
-                Worker worker = await GetWorkerById(workerId);
-                TaskItem? taskToRemove = worker.ContainerTasks.FirstOrDefault(t => t.Id == taskId);
+                User wser = await GetUserById(UserId);
+                TaskItem? taskToRemove = wser.ContainerTasks.FirstOrDefault(t => t.Id == taskId);
                 if (taskToRemove != null)
                 {
-                    worker.ContainerTasks.Remove(taskToRemove);
+                    wser.ContainerTasks.Remove(taskToRemove);
                     _db.Tasks.Remove(taskToRemove);
                     await _db.SaveChangesAsync();
                 }

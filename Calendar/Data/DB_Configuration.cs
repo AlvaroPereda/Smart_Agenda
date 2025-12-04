@@ -6,7 +6,7 @@ namespace Calendar.Data
     public class DB_Configuration(DbContextOptions<DB_Configuration> options) : DbContext(options)
     {
         public DbSet<TaskItem> Tasks { get; set; }
-        public DbSet<Worker> Workers { get; set; }
+        public DbSet<User> Users { get; set; }
         public DbSet<Schedule> Schedules { get; set; }
     }
 }

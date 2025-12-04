@@ -39,7 +39,7 @@ public class TaskController(DB_Service db) : Controller
         {
             return [];
         }
-        Worker user = await _db.GetWorkerById(int.Parse(userIdCookie));
+        User user = await _db.GetUserById(int.Parse(userIdCookie));
         return user.ContainerTasks;
     }
     
@@ -59,7 +59,7 @@ public class TaskController(DB_Service db) : Controller
         {
             return RedirectToAction("Login", "Home");
         }
-        Worker user = await _db.GetWorkerById(int.Parse(userIdCookie));
+        User user = await _db.GetUserById(int.Parse(userIdCookie));
 
         TaskItem nuevaTarea = new()
         {
@@ -85,7 +85,7 @@ public class TaskController(DB_Service db) : Controller
         {
             return Unauthorized(new { message = "Se requiere autenticación." });
         }
-        Worker user = await _db.GetWorkerById(int.Parse(userIdCookie));
+        User user = await _db.GetUserById(int.Parse(userIdCookie));
         TaskItem? task = user.ContainerTasks.FirstOrDefault(t => t.Title == updatedTask.Title && t.Id != id);
         if (task != null)
             return BadRequest(new { message = "Ya existe una tarea con ese título." });
@@ -94,9 +94,8 @@ public class TaskController(DB_Service db) : Controller
         if (taskToUpdate == null)
             return NotFound(new { message = "Tarea no encontrada." });
         
-        
-        await DeleteTask(id); // Elimino la tarea antigua
         await Create(updatedTask.Title, updatedTask.Deadline, updatedTask.Hours); // Creo la tarea actualizada
+        await DeleteTask(id); // Elimino la tarea antigua
 
         return Ok();
     }
@@ -128,11 +127,11 @@ public class TaskController(DB_Service db) : Controller
         return priority;
     }
 
-    private static TaskItem CalculateSchedule(TaskItem task, Worker worker)
+    private static TaskItem CalculateSchedule(TaskItem task, User wser)
     {
-        List<Schedule> horarios = worker.Schedules;
-        List<TaskItem> tasksWorker = worker.ContainerTasks;
-        if (tasksWorker.Count == 0)
+        List<Schedule> horarios = wser.Schedules;
+        List<TaskItem> tasksUser = wser.ContainerTasks;
+        if (tasksUser.Count == 0)
         {
             var result = horarios[0].StartTime.AddHours(task.Hours);
             task.Start = DateTime.Today.Add(horarios[0].StartTime.ToTimeSpan());
@@ -141,7 +140,7 @@ public class TaskController(DB_Service db) : Controller
         }
         else
         {
-            List<TaskItem> allTasks = [.. tasksWorker, task];
+            List<TaskItem> allTasks = [.. tasksUser, task];
             allTasks.Sort((a, b) => b.Priority.CompareTo(a.Priority));
 
             DateTime startTime = DateTime.Today.Add(horarios[0].StartTime.ToTimeSpan());
@@ -163,7 +162,7 @@ public class TaskController(DB_Service db) : Controller
         {
             return RedirectToAction("Login", "Home");
         }
-        Worker user = await _db.GetWorkerById(int.Parse(userIdCookie));
+        User user = await _db.GetUserById(int.Parse(userIdCookie));
         var schedule = user.Schedules?.OrderBy(s => s.StartTime).ToList();
         var tasks = user.ContainerTasks?.OrderByDescending(t => t.Priority);
 
