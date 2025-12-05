@@ -2,6 +2,7 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Calendar.Models;
 using Calendar.Data;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Calendar.Controllers;
 
@@ -30,42 +31,57 @@ public class HomeController : Controller
         return View();
     }
 
-    [HttpPost]
-    public async Task<IActionResult> Login(string username, string password, bool login, string? start, string? end)
+    public class AuthForm
     {
-        if(login) // Es un inicio de sesión
+        public required string Name { get; set; }
+        public required string Password { get; set; }
+        public required string Action { get; set; }
+        public string? Start { get; set; }
+        public string? End { get; set; }
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Login([FromForm] AuthForm form)
+    {
+        if(!ModelState.IsValid)
+            return View(form);
+
+        if(form.Action == "login") // Es un inicio de sesión
         {
-            var user = await _db.AuthenticateUser(username, password);
-            if(user != null)
-            {
-                Response.Cookies.Append("UserId", user.Id.ToString());
-                return RedirectToAction("Index", "Calendar");
-            }
-        }
-        else // Es un registro
-        {
-            var user = await _db.GetUserByName(username);
+            var user = await _db.AuthenticateUser(form.Name, form.Password);
             if(user == null)
             {
-                var wser = new User
+                ModelState.AddModelError(string.Empty, "Nombre de usuario o contraseña incorrectos.");
+                return View();
+            }
+
+            Response.Cookies.Append("UserId", user.Id.ToString());
+            return RedirectToAction("Index", "Calendar");
+        } else if(form.Action == "register")
+        {
+            var user_existe = await _db.GetUserByName(form.Name);
+            if(user_existe != null)
+            {
+                ModelState.AddModelError(string.Empty, "El usuario ya existe.");
+            }
+            string passwordhash = BCrypt.Net.BCrypt.HashPassword(form.Password);
+            var user = new User
                 {
-                    Name = username,
-                    Password = password,
+                    Name = form.Name,
+                    Password = passwordhash,
                     Schedules =
                     [
                         new Schedule
                         {
-                            StartTime = TimeOnly.Parse(start!),
-                            EndTime = TimeOnly.Parse(end!)
+                            StartTime = TimeOnly.Parse(form.Start!),
+                            EndTime = TimeOnly.Parse(form.End!)
                         }
                     ],
                     ContainerTasks = []
                 };
-                await _db.AddUser(wser);
-                Console.WriteLine(wser.Id);
-                Response.Cookies.Append("UserId", wser.Id.ToString());
+                await _db.AddUser(user);
+                Response.Cookies.Append("UserId", user.Id.ToString());
                 return RedirectToAction("Index", "Calendar");
-            }
         }
         return View();
     }

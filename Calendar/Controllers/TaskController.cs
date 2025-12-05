@@ -127,10 +127,10 @@ public class TaskController(DB_Service db) : Controller
         return priority;
     }
 
-    private static TaskItem CalculateSchedule(TaskItem task, User wser)
+    private static TaskItem CalculateSchedule(TaskItem task, User user)
     {
-        List<Schedule> horarios = wser.Schedules;
-        List<TaskItem> tasksUser = wser.ContainerTasks;
+        List<Schedule> horarios = user.Schedules;
+        List<TaskItem> tasksUser = user.ContainerTasks;
         if (tasksUser.Count == 0)
         {
             var result = horarios[0].StartTime.AddHours(task.Hours);

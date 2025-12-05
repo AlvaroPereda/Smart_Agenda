@@ -7,22 +7,12 @@ namespace Calendar.Data
     {
         private readonly DB_Configuration _db = db;
 
-        public async Task AddTask(TaskItem task)
+        #region USER Methods
+        public async Task<User> AddUser(User user)
         {
-            _db.Tasks.Add(task);
+            _db.Users.Add(user);
             await _db.SaveChangesAsync();
-        }
-
-        public async Task<User> AddUser(User wser)
-        {
-            _db.Users.Add(wser);
-            await _db.SaveChangesAsync();
-            return wser;
-        }
-
-        public async Task<List<User>> GetUsers()
-        {
-            return await _db.Users.Include(w => w.Schedules).ToListAsync();
+            return user;
         }
         public async Task<User> GetUserById(Guid id)
         {
@@ -32,45 +22,46 @@ namespace Calendar.Data
                 .FirstOrDefaultAsync(w => w.Id == id) ?? throw new Exception("Usuario no encontrado con ese id.");
             return result;
         }
-
-        public async Task UpdateContainerTasks(Guid id, TaskItem task)
-        {
-            try
-            {
-                User wser = await GetUserById(id);
-                wser.ContainerTasks.Add(task);
-                await _db.SaveChangesAsync();
-            } catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
-        }
-        public async Task<User> GetAllTasks(Guid id)
-        {
-            var result = await _db.Users
-                .Include(w => w.Schedules)
-                .Include(w => w.ContainerTasks)
-                .FirstOrDefaultAsync(w => w.Id == id) ?? throw new Exception("Usuario no encontrado con ese id.");
-            return result;
-        }
-
         public async Task<User?> GetUserByName(string name)
         {
             return await _db.Users.FirstOrDefaultAsync(w => w.Name == name);
         }
         public async Task<User?> AuthenticateUser(string username, string password)
         {
-            return await _db.Users.FirstOrDefaultAsync(w => w.Name == username && w.Password == password);
+            var user = await _db.Users.FirstOrDefaultAsync(w => w.Name == username);
+            if(user == null)
+                return null;
+            
+            bool isValid = BCrypt.Net.BCrypt.Verify(password, user.Password);
+            if(!isValid)
+                return null;
+
+            return user;
+        }
+
+        #endregion
+        #region TASK Methods
+        public async Task UpdateContainerTasks(Guid id, TaskItem task)
+        {
+            try
+            {
+                User user = await GetUserById(id);
+                user.ContainerTasks.Add(task);
+                await _db.SaveChangesAsync();
+            } catch (Exception ex)
+            {
+                throw new Exception(ex.Message);
+            }
         }
         public async Task DeleteTask(Guid UserId, Guid taskId)
         {
             try
             {
-                User wser = await GetUserById(UserId);
-                TaskItem? taskToRemove = wser.ContainerTasks.FirstOrDefault(t => t.Id == taskId);
+                User user = await GetUserById(UserId);
+                TaskItem? taskToRemove = user.ContainerTasks.FirstOrDefault(t => t.Id == taskId);
                 if (taskToRemove != null)
                 {
-                    wser.ContainerTasks.Remove(taskToRemove);
+                    user.ContainerTasks.Remove(taskToRemove);
                     _db.Tasks.Remove(taskToRemove);
                     await _db.SaveChangesAsync();
                 }
@@ -80,10 +71,6 @@ namespace Calendar.Data
                 throw new Exception(ex.Message);
             }
         }
-        public async Task UpdateTask(TaskItem task)
-        {
-            _db.Tasks.Update(task);
-            await _db.SaveChangesAsync();
-        }
+        #endregion
     }
 }

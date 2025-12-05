@@ -1,8 +1,11 @@
 <div>
+
+    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    
     <form action="/Home/Login" method="POST">
-        <input type="text" name="username" placeholder="Usuario" required />
-        <input type="password" name="password" placeholder="Contraseña" required />
-        <input type="text" name="login" value="true" id="login-input" hidden required>
+        <input type="text" name="name" placeholder="Usuario" autocomplete="username" required/>
+        <input type="password" name="password" placeholder="Contraseña" autocomplete="password" required/>
+        <input type="text" name="action" value="login" id="action-input" hidden required/> 
         <select name="start" id="start" hidden></select>
         <select name="end" id="end" hidden></select>
         <button type="submit" id="submit-button">Entrar</button>
@@ -15,7 +18,7 @@
     document.getElementById("toggle").onclick = function() {
         login = !login
         document.getElementById("submit-button").innerText = login ? "Entrar" : "Crear cuenta"
-        document.getElementById("login-input").value = login ? "true" : "false"
+        document.getElementById("action-input").value = login ? "login" : "register"
         document.getElementById("toggle").innerText = login ? "Registarse" : "Inicar sesión"
         document.getElementById("start").hidden = login;
         document.getElementById("end").hidden = login;
