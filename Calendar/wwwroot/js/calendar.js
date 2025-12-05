@@ -45,7 +45,10 @@ async function loadTasks() {
     try {
         const response = await fetch('/Task/GetTasksCalendar');
         const data = await response.json();
-        return data
+        if(response.ok)
+            return data
+        else 
+            console.error(`Error ${response.status}: ${data.message}`);
         
     } catch (error) {
         console.error('Error cargando tareas:', error);

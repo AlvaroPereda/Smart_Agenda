@@ -32,15 +32,16 @@ public class TaskController(DB_Service db) : Controller
     }
 
     [HttpGet]
-    public async Task<List<TaskItem>> GetTaskId()
+    public async Task<IActionResult> GetTasks()
     {
         var userIdCookie = Request.Cookies["userId"];
         if(string.IsNullOrEmpty(userIdCookie))
-        {
-            return [];
-        }
-        User user = await _db.GetUserById(Guid.Parse(userIdCookie));
-        return user.ContainerTasks;
+            return Unauthorized(new { message = "Se requiere autenticación." });
+        var user = await _db.GetUserById(Guid.Parse(userIdCookie));
+        if(user == null)
+            return NotFound(new { message = "Usuario no encontrado." });
+
+        return Ok(user.ContainerTasks);
     }
     
     #endregion
@@ -48,19 +49,27 @@ public class TaskController(DB_Service db) : Controller
     [HttpPost]
     public async Task<IActionResult> Create(string task, DateOnly date, int hours)
     {
-        var today = DateOnly.FromDateTime(DateTime.Now);
         var userIdCookie = Request.Cookies["userId"];
-        if (date < today)
+        if(string.IsNullOrEmpty(userIdCookie))
+        {
+            ModelState.AddModelError("auth", "Se requiere autenticación.");
+            return RedirectToAction("Login", "Home");
+        }
+
+        var today = DateOnly.FromDateTime(DateTime.Now);
+        if(date < today)
         {
             ModelState.AddModelError("date", "La fecha no puede ser menor a hoy.");
             return View();
         }
-        if(string.IsNullOrEmpty(userIdCookie))
-        {
-            return RedirectToAction("Login", "Home");
-        }
-        User user = await _db.GetUserById(Guid.Parse(userIdCookie));
 
+        var user = await _db.GetUserById(Guid.Parse(userIdCookie));
+        if(user == null)
+        {
+            ModelState.AddModelError(string.Empty, "Usuario no encontrado.");
+            return View();
+        }
+    
         TaskItem nuevaTarea = new()
         {
             Title = task,
@@ -70,7 +79,15 @@ public class TaskController(DB_Service db) : Controller
         };
 
         CalculateSchedule(nuevaTarea, user);
-        await _db.UpdateContainerTasks(Guid.Parse(userIdCookie), nuevaTarea);
+        try {
+            await _db.UpdateContainerTasks(Guid.Parse(userIdCookie), nuevaTarea);
+        } catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        } catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
         return RedirectToAction("Index");
     }
 
@@ -78,19 +95,25 @@ public class TaskController(DB_Service db) : Controller
     #endregion
     #region PUT Methods
     [HttpPut("Task/UpdateTask/{id}")]
-    public async Task<IActionResult> UpdateTask(Guid id, [FromBody] TaskItem updatedTask)
+    public async Task<IActionResult> UpdateTask(string id, [FromBody] TaskItem updatedTask)
     {
         var userIdCookie = Request.Cookies["userId"];
         if(string.IsNullOrEmpty(userIdCookie))
         {
             return Unauthorized(new { message = "Se requiere autenticación." });
         }
-        User user = await _db.GetUserById(Guid.Parse(userIdCookie));
-        TaskItem? task = user.ContainerTasks.FirstOrDefault(t => t.Title == updatedTask.Title && t.Id != id);
+
+        var user = await _db.GetUserById(Guid.Parse(userIdCookie));
+        if (user == null)
+        {
+            return NotFound(new { message = "Usuario no encontrado." });
+        }
+        
+        var task = user.ContainerTasks.FirstOrDefault(t => t.Title == updatedTask.Title && t.Id != Guid.Parse(id));
         if (task != null)
             return BadRequest(new { message = "Ya existe una tarea con ese título." });
         
-        TaskItem? taskToUpdate = user.ContainerTasks.FirstOrDefault(t => t.Id == id);
+        var taskToUpdate = user.ContainerTasks.FirstOrDefault(t => t.Id == Guid.Parse(id));
         if (taskToUpdate == null)
             return NotFound(new { message = "Tarea no encontrada." });
         
@@ -104,15 +127,33 @@ public class TaskController(DB_Service db) : Controller
     #endregion
     #region DELETE Methods
     [HttpDelete("Task/DeleteTask/{id}")]
-    public async Task<IActionResult> DeleteTask(Guid id)
+    public async Task<IActionResult> DeleteTask(string id)
     {
         var userIdCookie = Request.Cookies["userId"];
         if(string.IsNullOrEmpty(userIdCookie))
         {
             return Unauthorized(new { message = "Se requiere autenticación." }); 
         }
-        await _db.DeleteTask(Guid.Parse(userIdCookie), id);
-        return NoContent();
+
+        var user = await _db.GetUserById(Guid.Parse(userIdCookie));
+        if (user == null)
+        {
+            return NotFound(new { message = "Usuario no encontrado." });
+        }
+
+        try
+        {
+            await _db.DeleteTask(Guid.Parse(userIdCookie), Guid.Parse(id));
+            return NoContent();
+        } catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        } catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        
+        
     }
 
 
@@ -159,12 +200,14 @@ public class TaskController(DB_Service db) : Controller
     {
         var userIdCookie = Request.Cookies["userId"];
         if(string.IsNullOrEmpty(userIdCookie))
-        {
-            return RedirectToAction("Login", "Home");
-        }
-        User user = await _db.GetUserById(Guid.Parse(userIdCookie));
-        var schedule = user.Schedules?.OrderBy(s => s.StartTime).ToList();
-        var tasks = user.ContainerTasks?.OrderByDescending(t => t.Priority);
+            return Unauthorized(new { message = "Se requiere autenticación." }); 
+
+        var user = await _db.GetUserById(Guid.Parse(userIdCookie));
+        if(user == null)
+            return NotFound(new { message = "Usuario no encontrado." });
+
+        var schedule = user.Schedules.OrderBy(s => s.StartTime).ToList();
+        var tasks = user.ContainerTasks.OrderByDescending(t => t.Priority);
 
         if (schedule == null || tasks == null) return BadRequest("No se encontró el horario o las tareas.");
 

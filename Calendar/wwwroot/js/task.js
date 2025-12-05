@@ -3,10 +3,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 async function loadTasks() {
-    try {
-        const response = await fetch('/Task/GetTaskId');
-        const data = await response.json();
-        
+    const response = await fetch('/Task/GetTasks');
+    const data = await response.json();
+    if(response.ok) {
         const container = document.getElementById('task_container');
         container.innerHTML = '';
         
@@ -27,9 +26,8 @@ async function loadTasks() {
             `;
             container.appendChild(row);
         });
-    } catch (error) {
-        console.error('Error cargando tareas:', error);
-    }
+    } else
+        console.error(`Error ${response.status}: ${data.message}`);
 }
 
 function formatDate(dateString) {
@@ -94,12 +92,12 @@ $(document).on('click', '.btnCancel', function () {
 });
 
 $(document).on('click', '.btnConfirm', async function () {
-    const taskId = parseInt($(this).data('task-id'));
+    const taskId = $(this).data('task-id');
     const action = $(this).data('action');
     const row = $(this).closest('tr');
 
     if (action === 'delete') {
-        await fetch(`/Task/DeleteTask/${taskId}`, { method: 'DELETE'}) 
+        await fetch( `/Task/DeleteTask/${taskId}`, { method: 'DELETE'}) 
             .then(response => {
                 if (!response.ok) 
                     throw new Error(`Error HTTP: ${response.status} - No se pudo eliminar la tarea.`);
@@ -116,26 +114,19 @@ $(document).on('click', '.btnConfirm', async function () {
             deadline: newDeadline,
             hours: newHours
         };
-
-        try {
-            await fetch(`/Task/UpdateTask/${taskId}`, { 
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json' // Es necesario para enviar JSON
-                },
-                body: JSON.stringify(updatedTask)
-            }).then(response => {
-                if (!response.ok) 
-                    throw new Error(`Error HTTP: ${response.status} - No se pudo eliminar la tarea.`);
-                return response;
-            }).then(() => {
-                delete originalData[taskId];
-                loadTasks()
-            });
-        } catch (error) {
-            console.error('Error al actualizar:', error);
-            alert("Hubo un error al guardar los cambios.");
-        }
+        
+        const response = await fetch(`/Task/UpdateTask/${taskId}`, { 
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json' // Es necesario para enviar JSON
+            },
+            body: JSON.stringify(updatedTask)});
+        const data = await response.json();
+        if(response.ok) {
+            delete originalData[taskId];
+            loadTasks();
+        } else
+            console.error(`Error ${response.status}: ${data.message}`);
     }
 });
 

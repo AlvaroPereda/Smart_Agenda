@@ -1,5 +1,6 @@
 using Calendar.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Calendar.Data
 {
@@ -14,13 +15,12 @@ namespace Calendar.Data
             await _db.SaveChangesAsync();
             return user;
         }
-        public async Task<User> GetUserById(Guid id)
+        public async Task<User?> GetUserById(Guid id)
         {
-            var result = await _db.Users
+            return await _db.Users
                 .Include(w => w.Schedules)
                 .Include(w => w.ContainerTasks)
-                .FirstOrDefaultAsync(w => w.Id == id) ?? throw new Exception("Usuario no encontrado con ese id.");
-            return result;
+                .FirstOrDefaultAsync(w => w.Id == id);
         }
         public async Task<User?> GetUserByName(string name)
         {
@@ -41,11 +41,12 @@ namespace Calendar.Data
 
         #endregion
         #region TASK Methods
+
         public async Task UpdateContainerTasks(Guid id, TaskItem task)
         {
             try
             {
-                User user = await GetUserById(id);
+                User user = await GetUserById(id) ?? throw new KeyNotFoundException("Usuario no encontrado.");
                 user.ContainerTasks.Add(task);
                 await _db.SaveChangesAsync();
             } catch (Exception ex)
@@ -57,14 +58,13 @@ namespace Calendar.Data
         {
             try
             {
-                User user = await GetUserById(UserId);
-                TaskItem? taskToRemove = user.ContainerTasks.FirstOrDefault(t => t.Id == taskId);
-                if (taskToRemove != null)
-                {
-                    user.ContainerTasks.Remove(taskToRemove);
-                    _db.Tasks.Remove(taskToRemove);
-                    await _db.SaveChangesAsync();
-                }
+                User user = await GetUserById(UserId) ?? throw new KeyNotFoundException("Usuario no encontrado.");
+                var taskToRemove = user.ContainerTasks.FirstOrDefault(t => t.Id == taskId) ?? throw new KeyNotFoundException("Tarea no encontrada.");
+                
+                user.ContainerTasks.Remove(taskToRemove);
+                _db.Tasks.Remove(taskToRemove);
+                await _db.SaveChangesAsync();
+
             }
             catch (Exception ex)
             {
