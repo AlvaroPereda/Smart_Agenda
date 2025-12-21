@@ -3,14 +3,24 @@ document.addEventListener('DOMContentLoaded', async function() {
     const CalendarObj = window.tui.Calendar;
 
     const calendar = new CalendarObj('#calendar', {
-        defaultView: 'month',
+        defaultView: 'week',
         isReadOnly: false,
-        month: {
-            workweek: false,
-            startDayOfWeek: 1,
-            visibleWeeksCount: 1
+        usageStatistics: false, 
+        
+        week: {
+            taskView: false,     
+            eventView: ['time'],  
+            hourStart: 7,     // Esto hay que cambiarlo en función del schedule del usuario    
+            hourEnd: 19,          
+            startDayOfWeek: 1,    
+            workweek: true,  
+            dayNames: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
         },
+        
         template: {
+            weekDayName: function(model) {
+                return `<span class="tui-full-calendar-dayname-date">${model.date}</span>&nbsp;&nbsp;<span class="tui-full-calendar-dayname-name">${model.dayName}</span>`;
+            },
             time: function(event) {
                 const hora = event.start.getHours().toString().padStart(2, '0');
                 const min = event.start.getMinutes().toString().padStart(2, '0');
@@ -23,13 +33,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('btnNext').onclick = () => calendar.next();
     document.getElementById('btnToday').onclick = () => calendar.today();
 
-    console.log(task);
-    // Pendiente de mejorar
     if (task.length) {
-        task.forEach(e => {
-            e.start = new Date(e.start);
-            e.end = new Date(e.end);
-        });
         calendar.createEvents(task);
     }
 });

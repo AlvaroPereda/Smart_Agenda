@@ -172,11 +172,14 @@ public class TaskController(DB_Service db) : Controller
     {
         List<Schedule> horarios = user.Schedules;
         List<TaskItem> tasksUser = user.ContainerTasks;
+        
+        DateTime todayUnspecified = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Unspecified);
+
         if (tasksUser.Count == 0)
         {
             var result = horarios[0].StartTime.AddHours(task.Hours);
-            task.Start = DateTime.Today.Add(horarios[0].StartTime.ToTimeSpan());
-            task.End = DateTime.Today.Add(result.ToTimeSpan());
+            task.Start = todayUnspecified.Add(horarios[0].StartTime.ToTimeSpan());
+            task.End = todayUnspecified.Add(result.ToTimeSpan());
             return task;
         }
         else
@@ -184,7 +187,7 @@ public class TaskController(DB_Service db) : Controller
             List<TaskItem> allTasks = [.. tasksUser, task];
             allTasks.Sort((a, b) => b.Priority.CompareTo(a.Priority));
 
-            DateTime startTime = DateTime.Today.Add(horarios[0].StartTime.ToTimeSpan());
+            DateTime startTime = todayUnspecified.Add(horarios[0].StartTime.ToTimeSpan());
 
             foreach (var t in allTasks)
             {
@@ -212,8 +215,9 @@ public class TaskController(DB_Service db) : Controller
         if (schedule == null || tasks == null) return BadRequest("No se encontró el horario o las tareas.");
 
         int dayOffset = 0; // días desde hoy
-        var currentStart = DateTime.Today.AddDays(dayOffset).Add(schedule[0].StartTime.ToTimeSpan());
-        var currentEnd = DateTime.Today.AddDays(dayOffset).Add(schedule[0].EndTime.ToTimeSpan());
+        DateTime todayUnspecified = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Unspecified);
+        var currentStart = todayUnspecified.AddDays(dayOffset).Add(schedule[0].StartTime.ToTimeSpan());
+        var currentEnd = todayUnspecified.AddDays(dayOffset).Add(schedule[0].EndTime.ToTimeSpan());
         int scheduleIndex = 0;
 
         List<TaskItem> result = [];
@@ -237,8 +241,8 @@ public class TaskController(DB_Service db) : Controller
                         dayOffset++;
                     }
 
-                    start = DateTime.Today.AddDays(dayOffset).Add(schedule[scheduleIndex].StartTime.ToTimeSpan());
-                    currentEnd = DateTime.Today.AddDays(dayOffset).Add(schedule[scheduleIndex].EndTime.ToTimeSpan());
+                    start = todayUnspecified.AddDays(dayOffset).Add(schedule[scheduleIndex].StartTime.ToTimeSpan());
+                    currentEnd = todayUnspecified.AddDays(dayOffset).Add(schedule[scheduleIndex].EndTime.ToTimeSpan());
                 }
 
                 // Calculamos cuántas horas quedan en esta franja
