@@ -1,9 +1,22 @@
-<div>
-    <h1>Crear tarea</h1>
+<div class="task-container">
+    <h2>Crear tarea</h2>
+
     <form action="/Task/Create" method="POST">
-        <label>Nombre de la tarea<input type="text" name="task" required></label><br>
-        <label>Fecha de finalización<input type="Date" name="date" required></label><br>
-        <label>Horas requeridas<input type="number"name="hours" required></label><br>
-        <button type="submit">Crear</button>
+        <div class="input-group">
+            <label>Nombre de la tarea</label>
+            <input type="text" name="task" placeholder="Ej. Preparar informe" required>
+        </div>
+
+        <div class="input-group">
+            <label>Fecha de finalización</label>
+            <input type="date" name="date" required>
+        </div>
+
+        <div class="input-group">
+            <label>Horas requeridas</label>
+            <input type="number" name="hours" min="0" step="0.5" placeholder="Ej. 2.5" required>
+        </div>
+
+        <button type="submit" class="primary-btn">Crear</button>
     </form>
 </div>

@@ -1,7 +1,11 @@
-<div class="container">
-    <h1>Lista de tareas</h1>
-    <div class="table-responsive">
-        <table class="table table-striped">
+<div class="task-list-container">
+    <div class="task-list-header">
+        <h2>Lista de tareas</h2>
+        <a href="/Task/Create" class="primary-btn">+ Nueva tarea</a>
+    </div>
+
+    <div class="task-table-wrapper">
+        <table class="task-table">
             <thead>
                 <tr>
                     <th>Título</th>
@@ -10,8 +14,7 @@
                     <th>Acciones</th>
                 </tr>
             </thead>
-            <tbody id="task_container">
-            </tbody>
+            <tbody id="task_container"></tbody>
         </table>
     </div>
 </div>

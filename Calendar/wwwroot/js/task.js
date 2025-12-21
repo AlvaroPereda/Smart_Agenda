@@ -37,7 +37,6 @@ function formatDate(dateString) {
 }
 
 $(document).on('click', '.btnDelete', function () {
-    const taskId = $(this).data('task-id');
     const buttonGroup = $(this).parent();
     buttonGroup.find('.btnEdit, .btnDelete').attr('hidden', true);
     buttonGroup.find('.btnConfirm, .btnCancel').attr('hidden', false);
@@ -121,12 +120,15 @@ $(document).on('click', '.btnConfirm', async function () {
                 'Content-Type': 'application/json' // Es necesario para enviar JSON
             },
             body: JSON.stringify(updatedTask)});
-        const data = await response.json();
         if(response.ok) {
             delete originalData[taskId];
             loadTasks();
-        } else
+        } 
+        else {
+            const data = await response.json();
             console.error(`Error ${response.status}: ${data.message}`);
+        }
+            
     }
 });
 

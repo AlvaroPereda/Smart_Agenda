@@ -1,10 +1,16 @@
-<h2>Calendario de tareas</h2>
-<div style="margin-bottom: 10px;">
-    <button id="btnPrev">← Semana anterior</button>
-    <button id="btnToday">Hoy</button>
-    <button id="btnNext">Semana siguiente →</button>
+<div class="calendar-container">
+    <div class="calendar-header">
+        <h2>Calendario de tareas</h2>
+
+        <div class="calendar-controls">
+    <button id="btnPrev" class="secondary-btn" title="Semana anterior">&lsaquo;</button>
+    <button id="btnToday" class="primary-btn">Hoy</button>
+    <button id="btnNext" class="secondary-btn" title="Semana siguiente">&rsaquo;</button>
 </div>
-<div id="calendar" style="height: 700px; border: 1px solid #ddd;"></div>
+    </div>
+
+    <div id="calendar" class="calendar-box"></div>
+</div>
 
 @section Scripts {
     <script src="~/js/calendar.js"></script>

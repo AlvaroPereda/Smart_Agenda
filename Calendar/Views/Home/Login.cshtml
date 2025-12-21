@@ -1,46 +1,36 @@
-<div>
+<div class="login-container">
+    <h2 id="form-title">Iniciar sesión</h2>
 
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-    
     <form action="/Home/Login" method="POST">
-        <input type="text" name="name" placeholder="Usuario" autocomplete="username" required/>
-        <input type="password" name="password" placeholder="Contraseña" autocomplete="password" required/>
-        <input type="text" name="action" value="login" id="action-input" hidden required/> 
-        <select name="start" id="start" hidden></select>
-        <select name="end" id="end" hidden></select>
-        <button type="submit" id="submit-button">Entrar</button>
+        <div class="input-group">
+            <input type="text" name="name" placeholder="Usuario" autocomplete="username" required />
+        </div>
+
+        <div class="input-group">
+            <input type="password" name="password" placeholder="Contraseña" autocomplete="current-password" required />
+        </div>
+
+        <div class="extra-fields" id="extra-fields">
+            <label>Horario disponible</label>
+            <div class="time-row">
+                <select name="start" id="start"></select>
+                <span>—</span>
+                <select name="end" id="end"></select>
+            </div>
+        </div>
+
+        <input type="hidden" name="action" value="login" id="action-input" />
+
+        <button type="submit" class="primary-btn" id="submit-button">Entrar</button>
     </form>
-        <button type="button" id="toggle">Registarse</button>
+
+    <div class="footer">
+        <p id="toggle-text">¿No tienes cuenta?</p>
+        <button type="button" class="link-btn" id="toggle">Registrarse</button>
+    </div>
 </div>
 
-<script>
-    let login = true;
-    document.getElementById("toggle").onclick = function() {
-        login = !login
-        document.getElementById("submit-button").innerText = login ? "Entrar" : "Crear cuenta"
-        document.getElementById("action-input").value = login ? "login" : "register"
-        document.getElementById("toggle").innerText = login ? "Registarse" : "Inicar sesión"
-        document.getElementById("start").hidden = login;
-        document.getElementById("end").hidden = login;
-    };
-    const start = document.getElementById('start');
-        for (let h = 0; h < 24; h++) {
-            const hh = String(h).padStart(2, '0');
-            ['00', '30'].forEach(mm => {
-                const opt = document.createElement('option');
-                opt.value = `${hh}:${mm}`;
-                opt.text = `${hh}:${mm}`;
-                start.appendChild(opt);
-            });
-        }
-    const end = document.getElementById('end');
-        for (let h = 0; h < 24; h++) {
-            const hh = String(h).padStart(2, '0');
-            ['00', '30'].forEach(mm => {
-                const opt = document.createElement('option');
-                opt.value = `${hh}:${mm}`;
-                opt.text = `${hh}:${mm}`;
-                end.appendChild(opt);
-            });
-        }
-</script>
+
+@section Scripts {
+    <script src="~/js/login.js"></script>
+}
