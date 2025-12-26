@@ -2,31 +2,22 @@ using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Calendar.Models;
 using Calendar.Data;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace Calendar.Controllers;
 
-public class HomeController : Controller
+public class HomeController(DB_Service db) : Controller
 {
-    private readonly ILogger<HomeController> _logger;
-    private readonly DB_Service _db;
-
-    public HomeController(ILogger<HomeController> logger, DB_Service db)
-    {
-        _logger = logger;
-        _db = db;
-    }
-
+    private readonly DB_Service _db = db; 
     [HttpGet]
     public IActionResult Index()
     {
         return View();
     }
-    public IActionResult Privacy()
+    public IActionResult Login()
     {
         return View();
     }
-    public IActionResult Login()
+    public IActionResult Settings()
     {
         return View();
     }
@@ -57,7 +48,7 @@ public class HomeController : Controller
 
             Response.Cookies.Append("UserId", user.Id.ToString());
             return RedirectToAction("Index", "Calendar");
-        } else if(form.Action == "register")
+        } else if(form.Action == "register") // Es un registro
         {
             var user_existe = await _db.GetUserByName(form.Name);
             if(user_existe != null)

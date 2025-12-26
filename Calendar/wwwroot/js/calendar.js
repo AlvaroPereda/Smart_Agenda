@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', async function() {
     const result = await loadTasks();
     const CalendarObj = window.tui.Calendar;
     const tasks = result.tasks;
-    const schedule = result.schedule; 
 
     const allStarts = result.schedule.map(s => parseInt(s.startTime.split(':')[0]));
     const allEnds = result.schedule.map(s => parseInt(s.endTime.split(':')[0]));
