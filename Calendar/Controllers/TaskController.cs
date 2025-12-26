@@ -283,7 +283,11 @@ public class TaskController(DB_Service db) : Controller
                 }
             }
         }
-        return Json(result);
+        return Json(new
+        {
+            tasks = result,
+            schedule
+        });
     }  
     
     #endregion

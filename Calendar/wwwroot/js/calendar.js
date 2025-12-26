@@ -1,6 +1,14 @@
 document.addEventListener('DOMContentLoaded', async function() {
-    const task = await loadTasks();
+    const result = await loadTasks();
     const CalendarObj = window.tui.Calendar;
+    const tasks = result.tasks;
+    const schedule = result.schedule; 
+
+    const allStarts = result.schedule.map(s => parseInt(s.startTime.split(':')[0]));
+    const allEnds = result.schedule.map(s => parseInt(s.endTime.split(':')[0]));
+
+    const minHour = Math.min(...allStarts);
+    const maxHour = Math.max(...allEnds);
 
     const calendar = new CalendarObj('#calendar', {
         defaultView: 'week',
@@ -10,11 +18,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         week: {
             taskView: false,     
             eventView: ['time'],  
-            hourStart: 7,     // Esto hay que cambiarlo en función del schedule del usuario    
-            hourEnd: 19,          
+            hourStart: minHour, 
+            hourEnd: maxHour,          
             startDayOfWeek: 1,    
             workweek: true,  
-            dayNames: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb']
+            dayNames: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie']
         },
         
         template: {
@@ -33,20 +41,22 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('btnNext').onclick = () => calendar.next();
     document.getElementById('btnToday').onclick = () => calendar.today();
 
-    if (task.length) {
-        calendar.createEvents(task);
+    if (tasks.length) {
+        calendar.createEvents(tasks);
     }
 });
 
 async function loadTasks() {
     try {
         const response = await fetch('/Task/GetTasksCalendar');
-        const data = await response.json();
-        if(response.ok)
-            return data
-        else 
-            console.error(`Error ${response.status}: ${data.message}`);
-        
+        if (response.ok) {
+            const data = await response.json();
+            return data;
+        } 
+        else {
+            const errorData = await response.json();
+            console.error(`Error ${response.status}: ${errorData.message}`);
+        }        
     } catch (error) {
         console.error('Error cargando tareas:', error);
     }
