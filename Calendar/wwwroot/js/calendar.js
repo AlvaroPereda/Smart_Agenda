@@ -1,7 +1,6 @@
 document.addEventListener('DOMContentLoaded', async function() {
     const result = await loadTasks();
     const CalendarObj = window.tui.Calendar;
-    const tasks = result.tasks;
 
     const allStarts = result.schedule.map(s => parseInt(s.startTime.split(':')[0]));
     const allEnds = result.schedule.map(s => parseInt(s.endTime.split(':')[0]));
@@ -13,17 +12,31 @@ document.addEventListener('DOMContentLoaded', async function() {
         defaultView: 'week',
         isReadOnly: false,
         usageStatistics: false, 
-        
+        calendars: [
+            {
+                id: 'General', 
+                color: '#000000', 
+                backgroundColor: '#3498db',
+                borderColor: '#3498db',    
+                dragBackgroundColor: '#3498db',
+            },
+            {
+                id: 'Break',
+                color: '#000000',
+                backgroundColor: '#e67e22',
+                borderColor: '#d35400',
+                dragBackgroundColor: '#e67e22',
+            }
+        ],
         week: {
             taskView: false,     
             eventView: ['time'],  
             hourStart: minHour, 
             hourEnd: maxHour,          
             startDayOfWeek: 1,    
-            workweek: true,  
+            workweek: false,  
             dayNames: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie']
         },
-        
         template: {
             weekDayName: function(model) {
                 return `<span class="tui-full-calendar-dayname-date">${model.date}</span>&nbsp;&nbsp;<span class="tui-full-calendar-dayname-name">${model.dayName}</span>`;
@@ -40,7 +53,18 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('btnNext').onclick = () => calendar.next();
     document.getElementById('btnToday').onclick = () => calendar.today();
 
-    if (tasks.length) {
+    if ( result.tasks.length > 0) {
+        const tasks = result.tasks.map(task => ({
+            id: task.id.toString(),
+            calendarId: task.category,
+            title: task.title,
+            category: 'time',
+            start: new Date(task.start),
+            end: new Date(task.end),
+            backgroundColor: '#3498db', // Azul para trabajo
+        }));
+
+    
         calendar.createEvents(tasks);
     }
 });

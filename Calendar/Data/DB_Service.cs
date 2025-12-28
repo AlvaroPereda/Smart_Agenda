@@ -38,11 +38,22 @@ namespace Calendar.Data
 
             return user;
         }
+        public async Task UpdateUser(User user)
+        {
+            User existingUser = await GetUserById(user.Id) ?? throw new KeyNotFoundException("Usuario no encontrado.");
+
+            if(!string.IsNullOrEmpty(user.Name))
+                existingUser.Name = user.Name;
+            if(!string.IsNullOrEmpty(user.Password))
+                existingUser.Password = BCrypt.Net.BCrypt.HashPassword(user.Password);
+
+            await _db.SaveChangesAsync();
+        }
 
         #endregion
         #region TASK Methods
 
-        public async Task UpdateContainerTasks(Guid id, TaskItem task)
+        public async Task UpdateContainerTasks(Guid id, WorkTask task)
         {
             try
             {
@@ -62,7 +73,7 @@ namespace Calendar.Data
                 var taskToRemove = user.ContainerTasks.FirstOrDefault(t => t.Id == taskId) ?? throw new KeyNotFoundException("Tarea no encontrada.");
                 
                 user.ContainerTasks.Remove(taskToRemove);
-                _db.Tasks.Remove(taskToRemove);
+                _db.CalendarEvent.Remove(taskToRemove);
                 await _db.SaveChangesAsync();
 
             }

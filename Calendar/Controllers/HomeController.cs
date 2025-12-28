@@ -48,6 +48,7 @@ public class HomeController(DB_Service db) : Controller
 
             Response.Cookies.Append("UserId", user.Id.ToString());
             return RedirectToAction("Index", "Calendar");
+            
         } else if(form.Action == "register") // Es un registro
         {
             var user_existe = await _db.GetUserByName(form.Name);
@@ -55,11 +56,10 @@ public class HomeController(DB_Service db) : Controller
             {
                 ModelState.AddModelError(string.Empty, "El usuario ya existe.");
             }
-            string passwordhash = BCrypt.Net.BCrypt.HashPassword(form.Password);
             var user = new User
                 {
                     Name = form.Name,
-                    Password = passwordhash,
+                    Password =  BCrypt.Net.BCrypt.HashPassword(form.Password),
                     Schedules =
                     [
                         new Schedule
@@ -75,6 +75,51 @@ public class HomeController(DB_Service db) : Controller
                 return RedirectToAction("Index", "Calendar");
         }
         return View();
+    }
+
+    [HttpPost]
+    public IActionResult Logout() 
+    {
+        Response.Cookies.Delete("UserId");
+        return Ok( new { message = "Sesión cerrada correctamente" });
+    }
+
+    public async Task<IActionResult> GetUser()
+    {
+        var userIdCookie = Request.Cookies["userId"];
+        if(string.IsNullOrEmpty(userIdCookie))
+        {
+            ModelState.AddModelError("auth", "Se requiere autenticación.");
+            return RedirectToAction("Login", "Home");
+        }
+        try
+        {
+            User user = await _db.GetUserById(Guid.Parse(userIdCookie)) ?? throw new KeyNotFoundException("Usuario no encontrado.");
+            return Ok(user);
+        } catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
+        }
+    }
+
+    [HttpPut]
+    public async Task<IActionResult> UpdateUser([FromBody] User updateUser)
+    {
+        var userIdCookie = Request.Cookies["userId"];
+        if(string.IsNullOrEmpty(userIdCookie))
+            return Unauthorized (new { message = "Se requiere autorización" });
+
+        updateUser.Id = Guid.Parse(userIdCookie);
+
+        try
+        {
+            await _db.UpdateUser(updateUser);
+            return Ok();
+        } catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
+        }
+        
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

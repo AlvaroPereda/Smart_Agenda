@@ -8,15 +8,17 @@
 
         <div class="input-group">
             <label>Nombre de usuario</label>
-            <input type="text" placeholder="Usuario">
+            <input id="name" type="text" placeholder="Usuario">
         </div>
 
         <div class="input-group">
             <label>Nueva contraseña</label>
-            <input type="password" placeholder="••••••••">
+            <input id="password" type="password" placeholder="••••••••">
         </div>
 
-        <button class="primary-btn">Guardar cambios</button>
+        <p id="user-error" class="error-label"></p>
+
+        <button id="save-user" class="primary-btn">Guardar cambios</button>
     </section>
 
     <!-- HORARIO -->
@@ -26,27 +28,29 @@
         <div class="schedule-row">
             <span>Horario principal</span>
             <div class="time-range">
-                <input type="time" value="09:00">
-                <span>—</span>
-                <input type="time" value="17:00">
+                <input type="time" id="main-start">
+                <span style="text-align: center">—</span>
+                <input type="time" id="main-end">
             </div>
         </div>
+        
+        <div id="extra-schedules-container"></div>
 
-        <div class="schedule-row">
-            <span>Descanso / comida</span>
-            <div class="time-range">
-                <input type="time" value="14:00">
-                <span>—</span>
-                <input type="time" value="15:00">
-            </div>
+        <p id="global-error" class="error-label"></p>
+
+        <button id="add-schedule" class="secondary-btn" style="margin-top: 15px;">+ Añadir otro tramo</button>
+        <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">
+            <button id="save-schedules" class="primary-btn">Guardar Horarios</button> 
         </div>
-
-        <button class="secondary-btn">+ Añadir otro tramo</button>
     </section>
 
     <!-- CERRAR SESIÓN -->
     <section class="settings-section danger">
-        <button class="danger-btn">Cerrar sesión</button>
+        <button id="log-out" class="danger-btn">Cerrar sesión</button>
     </section>
 
 </div>
+
+@section Scripts {
+    <script src="~/js/settings.js"></script>
+}

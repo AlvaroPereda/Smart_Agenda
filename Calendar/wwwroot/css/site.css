@@ -520,4 +520,10 @@ input.form-control {
   background: #fecaca;
 }
 
+.error-label {
+  color: #e74c3c; 
+  display: none; 
+  font-size: 0.9em; 
+  margin-top: 10px;
+}
 

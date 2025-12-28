@@ -70,15 +70,17 @@ public class TaskController(DB_Service db) : Controller
             return View();
         }
     
-        TaskItem nuevaTarea = new()
+        WorkTask nuevaTarea = new()
         {
             Title = task,
             Deadline = date,
             Hours = hours,
+            Category = "General",
             Priority = CalculatePriority(date, hours)
         };
 
         CalculateSchedule(nuevaTarea, user);
+
         try {
             await _db.UpdateContainerTasks(Guid.Parse(userIdCookie), nuevaTarea);
         } catch (KeyNotFoundException ex)
@@ -95,7 +97,7 @@ public class TaskController(DB_Service db) : Controller
     #endregion
     #region PUT Methods
     [HttpPut("Task/UpdateTask/{id}")]
-    public async Task<IActionResult> UpdateTask(string id, [FromBody] TaskItem updatedTask)
+    public async Task<IActionResult> UpdateTask(string id, [FromBody] WorkTask updatedTask)
     {
         var userIdCookie = Request.Cookies["userId"];
         if(string.IsNullOrEmpty(userIdCookie))
@@ -168,10 +170,10 @@ public class TaskController(DB_Service db) : Controller
         return priority;
     }
 
-    private static TaskItem CalculateSchedule(TaskItem task, User user)
+    private static WorkTask CalculateSchedule(WorkTask task, User user)
     {
         List<Schedule> horarios = user.Schedules;
-        List<TaskItem> tasksUser = user.ContainerTasks;
+        List<WorkTask> tasksUser = user.ContainerTasks;
         
         DateTime todayUnspecified = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Unspecified);
 
@@ -184,7 +186,7 @@ public class TaskController(DB_Service db) : Controller
         }
         else
         {
-            List<TaskItem> allTasks = [.. tasksUser, task];
+            List<WorkTask> allTasks = [.. tasksUser, task];
             allTasks.Sort((a, b) => b.Priority.CompareTo(a.Priority));
 
             DateTime startTime = todayUnspecified.Add(horarios[0].StartTime.ToTimeSpan());
@@ -202,17 +204,25 @@ public class TaskController(DB_Service db) : Controller
     public async Task<IActionResult> GetTasksCalendar()
     {
         var userIdCookie = Request.Cookies["userId"];
-        if(string.IsNullOrEmpty(userIdCookie))
-            return Unauthorized(new { message = "Se requiere autenticación." }); 
+        if(string.IsNullOrEmpty(userIdCookie)) return Unauthorized(new { message = "Se requiere autenticación." }); 
 
         var user = await _db.GetUserById(Guid.Parse(userIdCookie));
-        if(user == null)
-            return NotFound(new { message = "Usuario no encontrado." });
+        if(user == null) return NotFound(new { message = "Usuario no encontrado." });
 
         var schedule = user.Schedules.OrderBy(s => s.StartTime).ToList();
+
+        var normalTasks = user.ContainerTasks
+                                .Where(t => t.Category == "General")
+                                .OrderByDescending(t => t.Priority)
+                                .ToList();
+
+        var breakTasks = user.ContainerTasks
+                                .Where(t => t.Category == "Break")
+                                .ToList();
+        
         var tasks = user.ContainerTasks.OrderByDescending(t => t.Priority);
 
-        if (schedule == null || tasks == null) return BadRequest("No se encontró el horario o las tareas.");
+        if (schedule == null || normalTasks == null) return BadRequest("No se encontró el horario o las tareas.");
 
         int dayOffset = 0; // días desde hoy
         DateTime todayUnspecified = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Unspecified);
@@ -220,7 +230,7 @@ public class TaskController(DB_Service db) : Controller
         var currentEnd = todayUnspecified.AddDays(dayOffset).Add(schedule[0].EndTime.ToTimeSpan());
         int scheduleIndex = 0;
 
-        List<TaskItem> result = [];
+        List<WorkTask> result = [];
 
         foreach (var task in tasks)
         {
@@ -251,11 +261,12 @@ public class TaskController(DB_Service db) : Controller
                 // Si la tarea cabe en esta franja
                 if (hoursLeft <= availableHours)
                 {
-                    result.Add(new TaskItem
+                    result.Add(new WorkTask
                     {
                         Title = task.Title,
                         Priority = task.Priority,
                         Hours = (int)hoursLeft,
+                        Category = task.Category,
                         Start = start,
                         End = start.AddHours(hoursLeft),
                         Deadline = task.Deadline
@@ -268,11 +279,12 @@ public class TaskController(DB_Service db) : Controller
                 else
                 {
                     // Dividimos la tarea en esta franja y seguimos en la siguiente
-                    result.Add(new TaskItem
+                    result.Add(new WorkTask
                     {
                         Title = task.Title,
                         Priority = task.Priority,
                         Hours = (int)availableHours,
+                        Category = task.Category,
                         Start = start,
                         End = currentEnd,
                         Deadline = task.Deadline
