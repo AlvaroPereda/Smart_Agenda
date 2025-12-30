@@ -2,11 +2,9 @@ document.addEventListener('DOMContentLoaded', async function() {
     const result = await loadTasks();
     const CalendarObj = window.tui.Calendar;
 
-    const allStarts = result.schedule.map(s => parseInt(s.startTime.split(':')[0]));
-    const allEnds = result.schedule.map(s => parseInt(s.endTime.split(':')[0]));
-
-    const minHour = Math.min(...allStarts);
-    const maxHour = Math.max(...allEnds);
+    
+    const start = parseInt(result.schedule.startTime.split(':'));
+    const end = parseInt(result.schedule.endTime.split(':'));
 
     const calendar = new CalendarObj('#calendar', {
         defaultView: 'week',
@@ -14,7 +12,7 @@ document.addEventListener('DOMContentLoaded', async function() {
         usageStatistics: false, 
         calendars: [
             {
-                id: 'General', 
+                id: 'Work', 
                 color: '#000000', 
                 backgroundColor: '#3498db',
                 borderColor: '#3498db',    
@@ -31,10 +29,10 @@ document.addEventListener('DOMContentLoaded', async function() {
         week: {
             taskView: false,     
             eventView: ['time'],  
-            hourStart: minHour, 
-            hourEnd: maxHour,          
+            hourStart: start, 
+            hourEnd: end,          
             startDayOfWeek: 1,    
-            workweek: false,  
+            workweek: true,  
             dayNames: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie']
         },
         template: {
@@ -53,19 +51,19 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('btnNext').onclick = () => calendar.next();
     document.getElementById('btnToday').onclick = () => calendar.today();
 
-    if ( result.tasks.length > 0) {
-        const tasks = result.tasks.map(task => ({
+    if ( result.calendarEvents.length > 0) {
+        const tasks = result.calendarEvents.map(task => ({
             id: task.id.toString(),
             calendarId: task.category,
             title: task.title,
             category: 'time',
             start: new Date(task.start),
             end: new Date(task.end),
-            backgroundColor: '#3498db', // Azul para trabajo
         }));
 
     
         calendar.createEvents(tasks);
+        calendar.setDate('2025-12-29');
     }
 });
 
@@ -76,6 +74,9 @@ async function loadTasks() {
             const data = await response.json();
             return data;
         } 
+        else if (response.status == 401) {
+            window.location.href = "/Home/login";
+        }
         else {
             const errorData = await response.json();
             console.error(`Error ${response.status}: ${errorData.message}`);

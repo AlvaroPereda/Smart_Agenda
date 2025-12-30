@@ -450,28 +450,58 @@ input.form-control {
 
 /* Horario */
 .schedule-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-  gap: 10px;
+  /* Use table row behavior so rows inside #schedules-table render correctly */
+  display: table-row;
 }
 
-.schedule-row span {
-  font-size: 14px;
-  min-width: 140px;
+.schedule-row td {
+  padding: 12px 10px;
+  vertical-align: middle;
+  white-space: nowrap;
 }
 
-.time-range {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+/* Table-specific layout for schedules */
+#schedules-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
 }
 
-.time-range input {
-  padding: 6px;
+#schedules-table thead th {
+  text-align: left;
+  padding: 12px 10px;
+}
+
+#schedules-table tbody td:first-child {
+  width: 240px; /* Tipo column */
+}
+
+#schedules-table tbody td:nth-child(2) {
+  width: 180px; /* Hora de inicio */
+}
+
+#schedules-table tbody td:nth-child(3) {
+  width: 320px; /* Hora de fin + botón */
+}
+
+#schedules-table input[type="time"] {
+  width: 120px;
+  padding: 8px;
   border-radius: 6px;
   border: 1px solid #ccc;
+}
+
+#schedules-table .remove-btn {
+  vertical-align: middle;
+  margin-left: 10px;
+  padding: 6px 10px;
+}
+
+.row-error {
+  display: block;
+  color: #e74c3c;
+  font-size: 0.9em;
+  margin-top: 6px;
 }
 
 /* Botones */
@@ -500,7 +530,6 @@ input.form-control {
   background: #e5e7eb;
 }
 
-/* Danger */
 .settings-section.danger {
   border-top: 1px solid #eee;
   padding-top: 20px;

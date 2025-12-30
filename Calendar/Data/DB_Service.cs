@@ -53,7 +53,7 @@ namespace Calendar.Data
         #endregion
         #region TASK Methods
 
-        public async Task UpdateContainerTasks(Guid id, WorkTask task)
+        public async Task UpdateContainerTasks(Guid id, CalendarEvent task)
         {
             try
             {

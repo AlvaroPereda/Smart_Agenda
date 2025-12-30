@@ -6,6 +6,6 @@ namespace Calendar.Models
         public required string Name { get; set; }
         public required string Password { get; set; }
         public List<Schedule> Schedules { get; set; } = [];
-        public List<WorkTask> ContainerTasks { get; set; } = [];
+        public List<CalendarEvent> ContainerTasks { get; set; } = [];
     }
 }

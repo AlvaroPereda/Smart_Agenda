@@ -25,18 +25,24 @@
     <section class="settings-section">
         <h3>Horario laboral</h3>
 
-        <div class="schedule-row">
-            <span>Horario principal</span>
-            <div class="time-range">
-                <input type="time" id="main-start">
-                <span style="text-align: center">—</span>
-                <input type="time" id="main-end">
-            </div>
-        </div>
-        
-        <div id="extra-schedules-container"></div>
+        <table id="schedules-table">
+            <thead>
+                <tr>
+                    <th>Tipo</th>
+                    <th>Hora de inicio</th>
+                    <th>Hora de fin</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="schedule-row main-row">
+                    <td>Horario principal</td>
+                    <td><input type="time" id="main-start"></td>
+                    <td><input type="time" id="main-end"></td>
+                </tr>
+            </tbody>
+        </table>
 
-        <p id="global-error" class="error-label"></p>
+        <span id="schedule-error" class="row-error"></span>
 
         <button id="add-schedule" class="secondary-btn" style="margin-top: 15px;">+ Añadir otro tramo</button>
         <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 15px;">

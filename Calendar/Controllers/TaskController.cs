@@ -40,8 +40,109 @@ public class TaskController(DB_Service db) : Controller
         var user = await _db.GetUserById(Guid.Parse(userIdCookie));
         if(user == null)
             return NotFound(new { message = "Usuario no encontrado." });
+        return Ok(user.ContainerTasks.Where(t => t is WorkTask).Cast<WorkTask>());
+    }
 
-        return Ok(user.ContainerTasks);
+    [HttpGet]
+    public async Task<IActionResult> GetTasksCalendar()
+    {
+        var userIdCookie = Request.Cookies["userId"];
+        if(string.IsNullOrEmpty(userIdCookie)) return Unauthorized(new { message = "Se requiere autenticación." }); 
+
+        var user = await _db.GetUserById(Guid.Parse(userIdCookie));
+        if(user == null) return NotFound(new { message = "Usuario no encontrado." });
+
+        var dailySchedule = user.Schedules.OrderBy(s => s.StartTime).FirstOrDefault();
+        if (dailySchedule == null) return BadRequest("No tienes un horario configurado.");
+
+        var workTasks = user.ContainerTasks.OfType<WorkTask>().OrderByDescending(t => t.Priority).ToList();
+        var breakTasks = user.ContainerTasks.OfType<BreakTask>().ToList();
+
+        DateTime todayUnspecified = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Unspecified);
+        var calendarEvents = new List<object>(); 
+        var scheduledDates = new HashSet<DateTime>(); 
+        DateTime currentDay = todayUnspecified; 
+        DateTime cursor = currentDay.Add(dailySchedule.StartTime.ToTimeSpan());
+
+        foreach (var task in workTasks)
+        {
+            double hoursRemaining = task.Hours;
+
+            while (hoursRemaining > 0)
+            {
+                scheduledDates.Add(currentDay);
+
+                DateTime dayEnd = currentDay.Add(dailySchedule.EndTime.ToTimeSpan());
+
+                if (cursor >= dayEnd)
+                {
+                    currentDay = currentDay.AddDays(1);
+                    cursor = currentDay.Add(dailySchedule.StartTime.ToTimeSpan());
+                    dayEnd = currentDay.Add(dailySchedule.EndTime.ToTimeSpan());
+                    scheduledDates.Add(currentDay); 
+                }
+
+                // Se busca si hay un conflicto con alguna tarea Break
+                var nextBreak = breakTasks
+                    .Select(b => new { 
+                        Original = b,
+                        Start = currentDay.Add(b.Start.ToTimeSpan()), 
+                        End = currentDay.Add(b.End.ToTimeSpan()) 
+                    })
+                    .Where(b => b.Start > cursor && b.Start < dayEnd) 
+                    .OrderBy(b => b.Start)
+                    .FirstOrDefault();
+
+                DateTime slotLimit = (nextBreak != null) ? nextBreak.Start : dayEnd;
+                TimeSpan availableTime = slotLimit - cursor;
+
+                if (availableTime.TotalMinutes <= 0)
+                {
+                    if (nextBreak != null && cursor >= nextBreak.Start && cursor < nextBreak.End)
+                        cursor = nextBreak.End;
+                    else 
+                        cursor = dayEnd; 
+                    continue; 
+                }
+
+                double hoursToAllocate = Math.Min(availableTime.TotalHours, hoursRemaining);
+
+                calendarEvents.Add(new 
+                {
+                    id = task.Id,
+                    title = task.Title,
+                    category = task.Category,
+                    start = cursor, 
+                    end = cursor.AddHours(hoursToAllocate),
+                });
+
+                hoursRemaining -= hoursToAllocate;
+                cursor = cursor.AddHours(hoursToAllocate);
+
+                if (nextBreak != null && Math.Abs((cursor - nextBreak.Start).TotalMinutes) < 1)
+                {
+                    cursor = nextBreak.End;
+                }
+            }
+        }
+
+        // Se agregan las tareas Break al calendario
+        foreach (var date in scheduledDates)
+        {
+            foreach (var brk in breakTasks)
+            {
+                calendarEvents.Add(new 
+                {
+                    id = brk.Id, 
+                    title = brk.Title,
+                    category = brk.Category,
+                    start = date.Add(brk.Start.ToTimeSpan()),
+                    end = date.Add(brk.End.ToTimeSpan()),
+                });
+            }
+        }
+
+        return Ok(new {calendarEvents, schedule = dailySchedule});
     }
     
     #endregion
@@ -93,6 +194,35 @@ public class TaskController(DB_Service db) : Controller
         return RedirectToAction("Index");
     }
 
+    [HttpPost]
+    public async Task<IActionResult> CreateBreakTask([FromBody] BreakTask breakTask)
+    {
+        var userIdCookie = Request.Cookies["userId"];
+        if(string.IsNullOrEmpty(userIdCookie))
+        {
+            ModelState.AddModelError("auth", "Se requiere autenticación.");
+            return RedirectToAction("Login", "Home");
+        }
+
+        var user = await _db.GetUserById(Guid.Parse(userIdCookie));
+        if(user == null)
+        {
+            ModelState.AddModelError(string.Empty, "Usuario no encontrado.");
+            return View();
+        }
+    
+        try {
+            await _db.UpdateContainerTasks(Guid.Parse(userIdCookie), breakTask);
+        } catch (KeyNotFoundException ex)
+        {
+            return NotFound(new { message = ex.Message });
+        } catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+        return RedirectToAction("Index");
+    }
+
 
     #endregion
     #region PUT Methods
@@ -125,16 +255,13 @@ public class TaskController(DB_Service db) : Controller
         return Ok();
     }
 
-
-    #endregion
-    #region DELETE Methods
-    [HttpDelete("Task/DeleteTask/{id}")]
-    public async Task<IActionResult> DeleteTask(string id)
+    [HttpPut("Task/UpdateBreakTask/{id}")]
+    public async Task<IActionResult> UpdateBreakTask(string id, [FromBody] BreakTask updatedTask)
     {
         var userIdCookie = Request.Cookies["userId"];
         if(string.IsNullOrEmpty(userIdCookie))
         {
-            return Unauthorized(new { message = "Se requiere autenticación." }); 
+            return Unauthorized(new { message = "Se requiere autenticación." });
         }
 
         var user = await _db.GetUserById(Guid.Parse(userIdCookie));
@@ -142,6 +269,32 @@ public class TaskController(DB_Service db) : Controller
         {
             return NotFound(new { message = "Usuario no encontrado." });
         }
+        
+        var task = user.ContainerTasks.FirstOrDefault(t => t.Title == updatedTask.Title && t.Id != Guid.Parse(id));
+        if (task != null)
+            return BadRequest(new { message = "Ya existe una tarea con ese título." });
+        
+        var taskToUpdate = user.ContainerTasks.FirstOrDefault(t => t.Id == Guid.Parse(id));
+        if (taskToUpdate == null)
+            return NotFound(new { message = "Tarea no encontrada." });
+        
+        await CreateBreakTask(updatedTask); // Creo la tarea actualizada
+        await DeleteTask(id); // Elimino la tarea antigua
+
+        return Ok();
+    }
+
+
+    #endregion
+    #region DELETE Methods
+    [HttpDelete("Task/DeleteTask/{id}")]
+    public async Task<IActionResult> DeleteTask(string id)
+    {
+        var userIdCookie = Request.Cookies["userId"];
+        if(string.IsNullOrEmpty(userIdCookie)) return Unauthorized(new { message = "Se requiere autenticación." }); 
+
+        var user = await _db.GetUserById(Guid.Parse(userIdCookie));
+        if (user == null) return NotFound(new { message = "Usuario no encontrado." });
 
         try
         {
@@ -153,9 +306,7 @@ public class TaskController(DB_Service db) : Controller
         } catch (Exception ex)
         {
             return BadRequest(new { message = ex.Message });
-        }
-        
-        
+        }        
     }
 
 
@@ -173,7 +324,7 @@ public class TaskController(DB_Service db) : Controller
     private static WorkTask CalculateSchedule(WorkTask task, User user)
     {
         List<Schedule> horarios = user.Schedules;
-        List<WorkTask> tasksUser = user.ContainerTasks;
+        List<WorkTask> tasksUser = [.. user.ContainerTasks.Where(t => t is WorkTask).Cast<WorkTask>()];
         
         DateTime todayUnspecified = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Unspecified);
 
@@ -200,107 +351,5 @@ public class TaskController(DB_Service db) : Controller
         }
         return task;
     }
-
-    public async Task<IActionResult> GetTasksCalendar()
-    {
-        var userIdCookie = Request.Cookies["userId"];
-        if(string.IsNullOrEmpty(userIdCookie)) return Unauthorized(new { message = "Se requiere autenticación." }); 
-
-        var user = await _db.GetUserById(Guid.Parse(userIdCookie));
-        if(user == null) return NotFound(new { message = "Usuario no encontrado." });
-
-        var schedule = user.Schedules.OrderBy(s => s.StartTime).ToList();
-
-        var normalTasks = user.ContainerTasks
-                                .Where(t => t.Category == "General")
-                                .OrderByDescending(t => t.Priority)
-                                .ToList();
-
-        var breakTasks = user.ContainerTasks
-                                .Where(t => t.Category == "Break")
-                                .ToList();
-        
-        var tasks = user.ContainerTasks.OrderByDescending(t => t.Priority);
-
-        if (schedule == null || normalTasks == null) return BadRequest("No se encontró el horario o las tareas.");
-
-        int dayOffset = 0; // días desde hoy
-        DateTime todayUnspecified = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Unspecified);
-        var currentStart = todayUnspecified.AddDays(dayOffset).Add(schedule[0].StartTime.ToTimeSpan());
-        var currentEnd = todayUnspecified.AddDays(dayOffset).Add(schedule[0].EndTime.ToTimeSpan());
-        int scheduleIndex = 0;
-
-        List<WorkTask> result = [];
-
-        foreach (var task in tasks)
-        {
-            double hoursLeft = task.Hours;
-            DateTime start = currentStart;
-
-            while (hoursLeft > 0)
-            {
-                // Si estamos fuera del horario actual, pasamos al siguiente
-                if (start >= currentEnd)
-                {
-                    scheduleIndex++;
-
-                    if (scheduleIndex >= schedule.Count)
-                    {
-                        // Pasamos al siguiente día
-                        scheduleIndex = 0;
-                        dayOffset++;
-                    }
-
-                    start = todayUnspecified.AddDays(dayOffset).Add(schedule[scheduleIndex].StartTime.ToTimeSpan());
-                    currentEnd = todayUnspecified.AddDays(dayOffset).Add(schedule[scheduleIndex].EndTime.ToTimeSpan());
-                }
-
-                // Calculamos cuántas horas quedan en esta franja
-                var availableHours = (currentEnd - start).TotalHours;
-
-                // Si la tarea cabe en esta franja
-                if (hoursLeft <= availableHours)
-                {
-                    result.Add(new WorkTask
-                    {
-                        Title = task.Title,
-                        Priority = task.Priority,
-                        Hours = (int)hoursLeft,
-                        Category = task.Category,
-                        Start = start,
-                        End = start.AddHours(hoursLeft),
-                        Deadline = task.Deadline
-                    });
-
-                    start = start.AddHours(hoursLeft);
-                    currentStart = start;
-                    hoursLeft = 0;
-                }
-                else
-                {
-                    // Dividimos la tarea en esta franja y seguimos en la siguiente
-                    result.Add(new WorkTask
-                    {
-                        Title = task.Title,
-                        Priority = task.Priority,
-                        Hours = (int)availableHours,
-                        Category = task.Category,
-                        Start = start,
-                        End = currentEnd,
-                        Deadline = task.Deadline
-                    });
-
-                    hoursLeft -= availableHours;
-                    start = currentEnd; // Avanzamos a la siguiente franja o día
-                }
-            }
-        }
-        return Json(new
-        {
-            tasks = result,
-            schedule
-        });
-    }  
-    
     #endregion
 }

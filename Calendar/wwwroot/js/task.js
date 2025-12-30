@@ -111,7 +111,8 @@ $(document).on('click', '.btnConfirm', async function () {
         const updatedTask = {
             title: newTitle,
             deadline: newDeadline,
-            hours: newHours
+            hours: parseInt(newHours),
+            category: "Work"
         };
         
         const response = await fetch(`/Task/UpdateTask/${taskId}`, { 

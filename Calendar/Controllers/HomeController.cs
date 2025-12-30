@@ -95,7 +95,13 @@ public class HomeController(DB_Service db) : Controller
         try
         {
             User user = await _db.GetUserById(Guid.Parse(userIdCookie)) ?? throw new KeyNotFoundException("Usuario no encontrado.");
-            return Ok(user);
+            var breakTasks = user.ContainerTasks.OfType<BreakTask>().OrderBy(t => t.Start).ToList();
+            return Ok(new
+            {
+                name = user.Name,
+                schedule = user.Schedules.FirstOrDefault(),
+                containerTasks = breakTasks
+            });
         } catch (Exception ex)
         {
             throw new Exception(ex.Message);
@@ -119,7 +125,27 @@ public class HomeController(DB_Service db) : Controller
         {
             throw new Exception(ex.Message);
         }
-        
+    }
+
+    [HttpPut]
+    public async Task<IActionResult> UpdateSchedule([FromBody] Schedule schedule)
+    {
+        var userIdCookie = Request.Cookies["userId"];
+        if(string.IsNullOrEmpty(userIdCookie)) return Unauthorized (new { message = "Se requiere autorización" });
+
+        try
+        {
+            User user = await _db.GetUserById(Guid.Parse(userIdCookie)) ?? throw new KeyNotFoundException("Usuario no encontrado.");
+            var userSchedule = user.Schedules.FirstOrDefault() ?? throw new KeyNotFoundException("Horario no encontrado.");
+            userSchedule.StartTime = schedule.StartTime;
+            userSchedule.EndTime = schedule.EndTime;
+
+            await _db.UpdateUser(user);
+            return Ok();
+        } catch (Exception ex)
+        {
+            throw new Exception(ex.Message);
+        }
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

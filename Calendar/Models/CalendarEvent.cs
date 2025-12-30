@@ -4,8 +4,7 @@ namespace Calendar.Models
     {
         public Guid Id { get; set; }
         public required string Title { get; set; }
-        public required string Category {get; set;} 
-        
+        public required string Category { get; set; }
     }
 
     public class WorkTask : CalendarEvent
@@ -16,7 +15,7 @@ namespace Calendar.Models
         public DateTime Start { get; set; }
         public DateTime End { get; set; }
     }
-    
+
     public class BreakTask : CalendarEvent
     {
         public TimeOnly Start { get; set; }
