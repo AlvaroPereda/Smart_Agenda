@@ -60,14 +60,12 @@ public class HomeController(DB_Service db) : Controller
                 {
                     Name = form.Name,
                     Password =  BCrypt.Net.BCrypt.HashPassword(form.Password),
-                    Schedules =
-                    [
-                        new Schedule
-                        {
-                            StartTime = TimeOnly.Parse(form.Start!),
-                            EndTime = TimeOnly.Parse(form.End!)
-                        }
-                    ],
+                    Schedule =
+                    new Schedule
+                    {
+                        StartTime = TimeOnly.Parse(form.Start!),
+                        EndTime = TimeOnly.Parse(form.End!)
+                    },
                     ContainerTasks = []
                 };
                 await _db.AddUser(user);
@@ -99,7 +97,7 @@ public class HomeController(DB_Service db) : Controller
             return Ok(new
             {
                 name = user.Name,
-                schedule = user.Schedules.FirstOrDefault(),
+                schedule = user.Schedule,
                 containerTasks = breakTasks
             });
         } catch (Exception ex)
@@ -136,7 +134,7 @@ public class HomeController(DB_Service db) : Controller
         try
         {
             User user = await _db.GetUserById(Guid.Parse(userIdCookie)) ?? throw new KeyNotFoundException("Usuario no encontrado.");
-            var userSchedule = user.Schedules.FirstOrDefault() ?? throw new KeyNotFoundException("Horario no encontrado.");
+            var userSchedule = user.Schedule ?? throw new KeyNotFoundException("Horario no encontrado.");
             userSchedule.StartTime = schedule.StartTime;
             userSchedule.EndTime = schedule.EndTime;
 

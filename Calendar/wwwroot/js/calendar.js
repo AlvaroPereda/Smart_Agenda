@@ -14,9 +14,9 @@ document.addEventListener('DOMContentLoaded', async function() {
             {
                 id: 'Work', 
                 color: '#000000', 
-                backgroundColor: '#3498db',
-                borderColor: '#3498db',    
-                dragBackgroundColor: '#3498db',
+                backgroundColor: '#9BBC76',
+                borderColor: '#86a860ff',    
+                dragBackgroundColor: '#9BBC76',
             },
             {
                 id: 'Break',

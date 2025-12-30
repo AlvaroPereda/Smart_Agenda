@@ -18,7 +18,7 @@ namespace Calendar.Data
         public async Task<User?> GetUserById(Guid id)
         {
             return await _db.Users
-                .Include(w => w.Schedules)
+                .Include(w => w.Schedule)
                 .Include(w => w.ContainerTasks)
                 .FirstOrDefaultAsync(w => w.Id == id);
         }

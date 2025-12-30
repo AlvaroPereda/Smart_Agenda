@@ -50,9 +50,9 @@ public class TaskController(DB_Service db) : Controller
         if(string.IsNullOrEmpty(userIdCookie)) return Unauthorized(new { message = "Se requiere autenticación." }); 
 
         var user = await _db.GetUserById(Guid.Parse(userIdCookie));
-        if(user == null) return NotFound(new { message = "Usuario no encontrado." });
+        if(user == null) return Unauthorized(new { message = "Usuario no encontrado." });
 
-        var dailySchedule = user.Schedules.OrderBy(s => s.StartTime).FirstOrDefault();
+        var dailySchedule = user.Schedule;
         if (dailySchedule == null) return BadRequest("No tienes un horario configurado.");
 
         var workTasks = user.ContainerTasks.OfType<WorkTask>().OrderByDescending(t => t.Priority).ToList();
@@ -176,7 +176,7 @@ public class TaskController(DB_Service db) : Controller
             Title = task,
             Deadline = date,
             Hours = hours,
-            Category = "General",
+            Category = "Work",
             Priority = CalculatePriority(date, hours)
         };
 
@@ -323,15 +323,14 @@ public class TaskController(DB_Service db) : Controller
 
     private static WorkTask CalculateSchedule(WorkTask task, User user)
     {
-        List<Schedule> horarios = user.Schedules;
         List<WorkTask> tasksUser = [.. user.ContainerTasks.Where(t => t is WorkTask).Cast<WorkTask>()];
         
         DateTime todayUnspecified = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Unspecified);
 
         if (tasksUser.Count == 0)
         {
-            var result = horarios[0].StartTime.AddHours(task.Hours);
-            task.Start = todayUnspecified.Add(horarios[0].StartTime.ToTimeSpan());
+            var result = user.Schedule.StartTime.AddHours(task.Hours);
+            task.Start = todayUnspecified.Add(user.Schedule.StartTime.ToTimeSpan());
             task.End = todayUnspecified.Add(result.ToTimeSpan());
             return task;
         }
@@ -340,7 +339,7 @@ public class TaskController(DB_Service db) : Controller
             List<WorkTask> allTasks = [.. tasksUser, task];
             allTasks.Sort((a, b) => b.Priority.CompareTo(a.Priority));
 
-            DateTime startTime = todayUnspecified.Add(horarios[0].StartTime.ToTimeSpan());
+            DateTime startTime = todayUnspecified.Add(user.Schedule.StartTime.ToTimeSpan());
 
             foreach (var t in allTasks)
             {
