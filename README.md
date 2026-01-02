@@ -1,6 +1,4 @@
-# Smart Agenda (En Progreso)
-
-⚠️ **Aviso:** Esta aplicación está en progreso y no se encuentra finalizada.
+# Smart Agenda 
 
 ## Descripción
 
