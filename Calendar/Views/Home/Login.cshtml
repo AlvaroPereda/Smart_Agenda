@@ -1,5 +1,11 @@
+@{
+    Layout = "_Layout_Login";
+}
+
 <div class="login-container">
     <h2 id="form-title">Iniciar sesión</h2>
+
+    <div asp-validation-summary="All" class="error-label"></div>
 
     <form action="/Home/Login" method="POST">
         <div class="input-group">
@@ -11,11 +17,11 @@
         </div>
 
         <div class="extra-fields" id="extra-fields">
-            <label>Horario disponible</label>
+            <label>Horario principal</label>
             <div class="time-row">
-                <select name="start" id="start"></select>
+                <input type="time" id="start" name="start">
                 <span>—</span>
-                <select name="end" id="end"></select>
+                <input type="time" id="end" name="end">
             </div>
         </div>
 

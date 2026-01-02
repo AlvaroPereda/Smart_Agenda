@@ -14,7 +14,7 @@ namespace Calendar.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<CalendarEvent>().UseTpcMappingStrategy(); // <--- ESTO ES LA CLAVE
+            modelBuilder.Entity<CalendarEvent>().UseTpcMappingStrategy();
 
             modelBuilder.Entity<WorkTask>().ToTable("WorkTasks");
             modelBuilder.Entity<BreakTask>().ToTable("BreakTasks");

@@ -6,6 +6,8 @@ const actionInput = document.getElementById("action-input");
 const extraFields = document.getElementById("extra-fields");
 const formTitle = document.getElementById("form-title");
 const toggleText = document.getElementById("toggle-text");
+const start = document.getElementById("start");
+const end = document.getElementById("end");
 
 toggleBtn.onclick = () => {
     login = !login;
@@ -17,20 +19,8 @@ toggleBtn.onclick = () => {
     formTitle.innerText = login ? "Iniciar sesión" : "Registro";
 
     extraFields.style.display = login ? "none" : "block";
+    start.required = !login;
+    end.required = !login;
+    start.disabled = login; 
+    end.disabled = login;
 };
-
-// Rellenar selects de horas
-function fillTimeSelect(select) {
-    for (let h = 0; h < 24; h++) {
-        const hh = String(h).padStart(2, '0');
-        ["00", "30"].forEach(mm => {
-            const opt = document.createElement("option");
-            opt.value = `${hh}:${mm}`;
-            opt.textContent = `${hh}:${mm}`;
-            select.appendChild(opt);
-        });
-    }
-}
-
-fillTimeSelect(document.getElementById("start"));
-fillTimeSelect(document.getElementById("end"));

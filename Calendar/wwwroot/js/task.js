@@ -3,9 +3,9 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 async function loadTasks() {
-    const response = await fetch('/Task/GetTasks');
-    const data = await response.json();
+    const response = await fetch('/Task/GetTasks');    
     if(response.ok) {
+        const data = await response.json();
         const container = document.getElementById('task_container');
         container.innerHTML = '';
         
@@ -26,8 +26,14 @@ async function loadTasks() {
             `;
             container.appendChild(row);
         });
-    } else
+    } 
+    else if (response.status == 401) {
+        window.location.href = "/Home/login";
+    }
+    else {
+        const data = await response.json();
         console.error(`Error ${response.status}: ${data.message}`);
+    }
 }
 
 function formatDate(dateString) {

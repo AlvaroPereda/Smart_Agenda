@@ -317,7 +317,7 @@ input.form-control {
   border-radius: 12px;
   box-shadow: 0 5px 15px rgba(0,0,0,0.1);
   font-family: system-ui, sans-serif;
-  max-height: 90vh;
+  height: calc(100vh - 120px);
   display: flex;
   flex-direction: column;
 }
@@ -375,13 +375,13 @@ input.form-control {
 }
 
 .calendar-box {
-  height: 700px;
+  flex: 1 1 auto;
+  min-height: 0;
   border-radius: 10px;
-  overflow: hidden;
+  overflow: auto;
   border: 1px solid #e5e7eb;
 }
 
-/* Ajustes visuales Toast UI */
 .tui-calendar-weekday-grid-line,
 .tui-calendar-weekday-border {
   border-color: #e5e7eb !important;
@@ -414,7 +414,6 @@ input.form-control {
   margin-bottom: 30px;
 }
 
-/* Secciones */
 .settings-section {
   margin-bottom: 40px;
 }
@@ -424,7 +423,6 @@ input.form-control {
   font-size: 18px;
 }
 
-/* Inputs */
 .input-group {
   margin-bottom: 15px;
 }
@@ -448,9 +446,8 @@ input.form-control {
   border-color: #4f46e5;
 }
 
-/* Horario */
+
 .schedule-row {
-  /* Use table row behavior so rows inside #schedules-table render correctly */
   display: table-row;
 }
 
@@ -460,7 +457,7 @@ input.form-control {
   white-space: nowrap;
 }
 
-/* Table-specific layout for schedules */
+
 #schedules-table {
   width: 100%;
   border-collapse: collapse;
@@ -473,15 +470,15 @@ input.form-control {
 }
 
 #schedules-table tbody td:first-child {
-  width: 240px; /* Tipo column */
+  width: 240px; 
 }
 
 #schedules-table tbody td:nth-child(2) {
-  width: 180px; /* Hora de inicio */
+  width: 180px; 
 }
 
 #schedules-table tbody td:nth-child(3) {
-  width: 320px; /* Hora de fin + botón */
+  width: 320px;
 }
 
 #schedules-table input[type="time"] {
@@ -504,7 +501,6 @@ input.form-control {
   margin-top: 6px;
 }
 
-/* Botones */
 .primary-btn {
   background: #4f46e5;
   color: white;
@@ -556,3 +552,64 @@ input.form-control {
   margin-top: 10px;
 }
 
+.primary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.login-container .extra-fields label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #333;
+}
+.login-container .extra-fields .time-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+}
+.login-container .extra-fields .time-row input[type="time"] {
+  width: 120px;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  background: #fff;
+  font-size: 14px;
+}
+.login-container .extra-fields .time-row span {
+  color: #666;
+  margin: 0 6px;
+}
+@media (max-width:480px) {
+  .login-container .extra-fields .time-row{flex-direction:column}
+  .login-container .extra-fields .time-row input[type="time"]{width:100%}
+}
+
+.no-scroll {
+  overflow-y: hidden !important;
+}
+
+.validation-summary-errors {
+  display: block !important; 
+  color: #e74c3c;      
+  background-color: #fce4e4; 
+  border: 1px solid #e74c3c;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  font-size: 0.9em;
+  text-align: left;
+}
+.validation-summary-errors ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+.validation-summary-valid {
+  display: none !important;
+}

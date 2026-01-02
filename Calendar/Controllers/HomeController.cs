@@ -7,30 +7,35 @@ namespace Calendar.Controllers;
 
 public class HomeController(DB_Service db) : Controller
 {
-    private readonly DB_Service _db = db; 
-    [HttpGet]
-    public IActionResult Index()
-    {
-        return View();
-    }
-    public IActionResult Login()
-    {
-        return View();
-    }
-    public IActionResult Settings()
-    {
-        return View();
-    }
+
+    #region Private Logic
+    private readonly DB_Service _db = db;
 
     public class AuthForm
     {
         public required string Name { get; set; }
         public required string Password { get; set; }
         public required string Action { get; set; }
-        public string? Start { get; set; }
-        public string? End { get; set; }
+        public TimeOnly? Start { get; set; }
+        public TimeOnly? End { get; set; }
     }
 
+    #endregion
+    #region GET Methods
+    [HttpGet]
+    public IActionResult Login()
+    {
+        return View();
+    }
+
+    [HttpGet]
+    public IActionResult Settings()
+    {
+        if(string.IsNullOrEmpty(Request.Cookies["userId"])) return RedirectToAction("Login", "Home");
+        return View();
+    }
+    #endregion
+    #region POST Methods
     [HttpPost]
     public async Task<IActionResult> Login([FromForm] AuthForm form)
     {
@@ -54,8 +59,16 @@ public class HomeController(DB_Service db) : Controller
             var user_existe = await _db.GetUserByName(form.Name);
             if(user_existe != null)
             {
-                ModelState.AddModelError(string.Empty, "El usuario ya existe.");
+                ModelState.AddModelError(string.Empty, "El usuario existe inicia sesión.");
+                return View();
             }
+
+            if(form.Start == null || form.End == null)
+            {
+                ModelState.AddModelError(string.Empty, "Debe especificar un horario válido.");
+                return View();
+            }
+
             var user = new User
                 {
                     Name = form.Name,
@@ -63,8 +76,8 @@ public class HomeController(DB_Service db) : Controller
                     Schedule =
                     new Schedule
                     {
-                        StartTime = TimeOnly.Parse(form.Start!),
-                        EndTime = TimeOnly.Parse(form.End!)
+                        StartTime = form.Start.Value,
+                        EndTime = form.End.Value,
                     },
                     ContainerTasks = []
                 };
@@ -85,14 +98,12 @@ public class HomeController(DB_Service db) : Controller
     public async Task<IActionResult> GetUser()
     {
         var userIdCookie = Request.Cookies["userId"];
-        if(string.IsNullOrEmpty(userIdCookie))
-        {
-            ModelState.AddModelError("auth", "Se requiere autenticación.");
-            return RedirectToAction("Login", "Home");
-        }
+        if(string.IsNullOrEmpty(userIdCookie)) return Unauthorized(new { message = "Usuario no encontrado." });
         try
         {
-            User user = await _db.GetUserById(Guid.Parse(userIdCookie)) ?? throw new KeyNotFoundException("Usuario no encontrado.");
+            User user = await _db.GetUserById(Guid.Parse(userIdCookie));
+            if(user == null) return Unauthorized(new { message = "Usuario no encontrado." });
+            
             var breakTasks = user.ContainerTasks.OfType<BreakTask>().OrderBy(t => t.Start).ToList();
             return Ok(new
             {
@@ -105,7 +116,8 @@ public class HomeController(DB_Service db) : Controller
             throw new Exception(ex.Message);
         }
     }
-
+    #endregion
+    #region PUT Methods
     [HttpPut]
     public async Task<IActionResult> UpdateUser([FromBody] User updateUser)
     {
@@ -144,12 +156,6 @@ public class HomeController(DB_Service db) : Controller
         {
             throw new Exception(ex.Message);
         }
-    }
-
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-    }
-    
+    }   
+    #endregion
 }

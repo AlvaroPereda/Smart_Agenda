@@ -1,8 +1,9 @@
+document.body.classList.add("no-scroll");
+
 document.addEventListener('DOMContentLoaded', async function() {
     const result = await loadTasks();
     const CalendarObj = window.tui.Calendar;
 
-    
     const start = parseInt(result.schedule.startTime.split(':'));
     const end = parseInt(result.schedule.endTime.split(':'));
 
@@ -32,8 +33,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             hourStart: start, 
             hourEnd: end,          
             startDayOfWeek: 1,    
-            workweek: true,  
-            dayNames: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie']
+            workweek: false,  
+            dayNames: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', "Sáb"]
         },
         template: {
             weekDayName: function(model) {
@@ -51,7 +52,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('btnNext').onclick = () => calendar.next();
     document.getElementById('btnToday').onclick = () => calendar.today();
 
-    if ( result.calendarEvents.length > 0) {
+    if (result.calendarEvents.length > 0) {
         const tasks = result.calendarEvents.map(task => ({
             id: task.id.toString(),
             calendarId: task.category,
@@ -61,9 +62,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             end: new Date(task.end),
         }));
 
-    
         calendar.createEvents(tasks);
-        calendar.setDate('2025-12-29');
     }
 });
 

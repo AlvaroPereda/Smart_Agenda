@@ -6,28 +6,59 @@ namespace Calendar.Controllers;
 
 public class TaskController(DB_Service db) : Controller
 {
+    #region Private Logic
+    private readonly DB_Service _db = db;
+    
+    private static double CalculatePriority(DateOnly date, int hours)
+    {
+
+        double daysleft = (date.ToDateTime(new TimeOnly()) - DateTime.Now).TotalDays;
+        double priority = hours / (daysleft + 1);
+        return priority;
+    }
+
+    private static WorkTask CalculateSchedule(WorkTask task, User user)
+    {
+        List<WorkTask> tasksUser = [.. user.ContainerTasks.Where(t => t is WorkTask).Cast<WorkTask>()];
+        
+        DateTime todayUnspecified = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Unspecified);
+
+        if (tasksUser.Count == 0)
+        {
+            var result = user.Schedule.StartTime.AddHours(task.Hours);
+            task.Start = todayUnspecified.Add(user.Schedule.StartTime.ToTimeSpan());
+            task.End = todayUnspecified.Add(result.ToTimeSpan());
+            return task;
+        }
+        else
+        {
+            List<WorkTask> allTasks = [.. tasksUser, task];
+            allTasks.Sort((a, b) => b.Priority.CompareTo(a.Priority));
+
+            DateTime startTime = todayUnspecified.Add(user.Schedule.StartTime.ToTimeSpan());
+
+            foreach (var t in allTasks)
+            {
+                t.Start = startTime;
+                t.End = startTime.AddHours(t.Hours);
+                startTime = t.End;
+            }
+        }
+        return task;
+    }
+    #endregion
     #region GET Methods
     [HttpGet]
     public IActionResult Index()
     {
+        if(string.IsNullOrEmpty(Request.Cookies["userId"])) return RedirectToAction("Login", "Home");
         return View();
     }
 
     [HttpGet]
     public IActionResult Create()
     {
-        return View();
-    }
-
-    [HttpGet]
-    public IActionResult Details()
-    {
-        return View();
-    }
-
-    [HttpGet]
-    public IActionResult Edit()
-    {
+        if(string.IsNullOrEmpty(Request.Cookies["userId"])) return RedirectToAction("Login", "Home");
         return View();
     }
 
@@ -35,11 +66,10 @@ public class TaskController(DB_Service db) : Controller
     public async Task<IActionResult> GetTasks()
     {
         var userIdCookie = Request.Cookies["userId"];
-        if(string.IsNullOrEmpty(userIdCookie))
-            return Unauthorized(new { message = "Se requiere autenticación." });
+        if(string.IsNullOrEmpty(userIdCookie)) return Unauthorized(new { message = "Se requiere autenticación." }); 
         var user = await _db.GetUserById(Guid.Parse(userIdCookie));
-        if(user == null)
-            return NotFound(new { message = "Usuario no encontrado." });
+        if(user == null) return Unauthorized(new { message = "Usuario no encontrado." });
+
         return Ok(user.ContainerTasks.Where(t => t is WorkTask).Cast<WorkTask>());
     }
 
@@ -48,7 +78,6 @@ public class TaskController(DB_Service db) : Controller
     {
         var userIdCookie = Request.Cookies["userId"];
         if(string.IsNullOrEmpty(userIdCookie)) return Unauthorized(new { message = "Se requiere autenticación." }); 
-
         var user = await _db.GetUserById(Guid.Parse(userIdCookie));
         if(user == null) return Unauthorized(new { message = "Usuario no encontrado." });
 
@@ -59,9 +88,16 @@ public class TaskController(DB_Service db) : Controller
         var breakTasks = user.ContainerTasks.OfType<BreakTask>().ToList();
 
         DateTime todayUnspecified = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Unspecified);
+        
+        DateTime currentDay = todayUnspecified;
+        while (currentDay.DayOfWeek == DayOfWeek.Saturday || currentDay.DayOfWeek == DayOfWeek.Sunday)
+        {
+            currentDay = currentDay.AddDays(1);
+        }
+
         var calendarEvents = new List<object>(); 
         var scheduledDates = new HashSet<DateTime>(); 
-        DateTime currentDay = todayUnspecified; 
+        
         DateTime cursor = currentDay.Add(dailySchedule.StartTime.ToTimeSpan());
 
         foreach (var task in workTasks)
@@ -77,12 +113,19 @@ public class TaskController(DB_Service db) : Controller
                 if (cursor >= dayEnd)
                 {
                     currentDay = currentDay.AddDays(1);
+
+                    // Si cae en finde semana 
+                    while (currentDay.DayOfWeek == DayOfWeek.Saturday || currentDay.DayOfWeek == DayOfWeek.Sunday)
+                    {
+                        currentDay = currentDay.AddDays(1);
+                    }
+
                     cursor = currentDay.Add(dailySchedule.StartTime.ToTimeSpan());
                     dayEnd = currentDay.Add(dailySchedule.EndTime.ToTimeSpan());
+                    
                     scheduledDates.Add(currentDay); 
                 }
-
-                // Se busca si hay un conflicto con alguna tarea Break
+                
                 var nextBreak = breakTasks
                     .Select(b => new { 
                         Original = b,
@@ -112,8 +155,8 @@ public class TaskController(DB_Service db) : Controller
                     id = task.Id,
                     title = task.Title,
                     category = task.Category,
-                    start = cursor, 
-                    end = cursor.AddHours(hoursToAllocate),
+                    start = cursor.ToString("yyyy-MM-ddTHH:mm:ss"), 
+                    end = cursor.AddHours(hoursToAllocate).ToString("yyyy-MM-ddTHH:mm:ss") 
                 });
 
                 hoursRemaining -= hoursToAllocate;
@@ -126,7 +169,7 @@ public class TaskController(DB_Service db) : Controller
             }
         }
 
-        // Se agregan las tareas Break al calendario
+        // Renderizado de Breaks 
         foreach (var date in scheduledDates)
         {
             foreach (var brk in breakTasks)
@@ -136,8 +179,8 @@ public class TaskController(DB_Service db) : Controller
                     id = brk.Id, 
                     title = brk.Title,
                     category = brk.Category,
-                    start = date.Add(brk.Start.ToTimeSpan()),
-                    end = date.Add(brk.End.ToTimeSpan()),
+                    start = date.Add(brk.Start.ToTimeSpan()).ToString("yyyy-MM-ddTHH:mm:ss"),
+                    end = date.Add(brk.End.ToTimeSpan()).ToString("yyyy-MM-ddTHH:mm:ss")
                 });
             }
         }
@@ -307,48 +350,6 @@ public class TaskController(DB_Service db) : Controller
         {
             return BadRequest(new { message = ex.Message });
         }        
-    }
-
-
-    #endregion
-    #region Private Logic
-    private readonly DB_Service _db = db;
-    private static double CalculatePriority(DateOnly date, int hours)
-    {
-
-        double daysleft = (date.ToDateTime(new TimeOnly()) - DateTime.Now).TotalDays;
-        double priority = hours / (daysleft + 1);
-        return priority;
-    }
-
-    private static WorkTask CalculateSchedule(WorkTask task, User user)
-    {
-        List<WorkTask> tasksUser = [.. user.ContainerTasks.Where(t => t is WorkTask).Cast<WorkTask>()];
-        
-        DateTime todayUnspecified = DateTime.SpecifyKind(DateTime.Today, DateTimeKind.Unspecified);
-
-        if (tasksUser.Count == 0)
-        {
-            var result = user.Schedule.StartTime.AddHours(task.Hours);
-            task.Start = todayUnspecified.Add(user.Schedule.StartTime.ToTimeSpan());
-            task.End = todayUnspecified.Add(result.ToTimeSpan());
-            return task;
-        }
-        else
-        {
-            List<WorkTask> allTasks = [.. tasksUser, task];
-            allTasks.Sort((a, b) => b.Priority.CompareTo(a.Priority));
-
-            DateTime startTime = todayUnspecified.Add(user.Schedule.StartTime.ToTimeSpan());
-
-            foreach (var t in allTasks)
-            {
-                t.Start = startTime;
-                t.End = startTime.AddHours(t.Hours);
-                startTime = t.End;
-            }
-        }
-        return task;
     }
     #endregion
 }

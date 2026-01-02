@@ -18,7 +18,11 @@ async function getUserSettings() {
         const response = await fetch("/Home/GetUser");
         if (response.ok) {
             return await response.json();
-        } else {
+        } 
+        else if (response.status == 401) {
+            window.location.href = "/Home/login";
+        }
+        else {
             const errorData = await response.json();
             console.error(`Error ${response.status}: ${errorData.message}`);
         }
@@ -64,9 +68,7 @@ $(document).on('click', '#save-user', async function () {
     try {
         const response = await fetch(`/Home/UpdateUser`, { 
                 method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json' // Es necesario para enviar JSON
-                },
+                headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(updateUser)
         });
 
