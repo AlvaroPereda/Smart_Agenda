@@ -8,4 +8,4 @@ RUN dotnet restore
 
 EXPOSE 5025
 
-# CMD [ "dotnet", "run" ]
+CMD [ "dotnet", "run" ]
