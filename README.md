@@ -20,5 +20,5 @@ Cuando finalice la ejecución del docker compose entre en la url  [http://localh
 Para detener los contenedores y eliminar los volúmenes de datos:
 
 ```bash
-docker compose down -v && docker rmi mini-tfg-net && docker rmi mysql:8.0
+docker compose down -v && docker rmi smart_agenda-net && docker rmi mysql:8.0
 ```
